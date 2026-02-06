@@ -11,7 +11,7 @@ public class PacketBuilder
         return new Packet(inCommand, bytes);
     }
 
-    public static Packet CreateObjectPacket<T>(Command inCommand, object inJSonObj)
+    public static Packet CreateObjectPacket<T>(Command inCommand, T inJSonObj)
     {
         string jsonSerializedString = JsonSerializer.Serialize(inJSonObj);
         return CreateTextPacket(inCommand, jsonSerializedString);
@@ -27,5 +27,10 @@ public class PacketBuilder
     {
         var json =  Encoding.UTF8.GetString(packet.Data);
         return JsonSerializer.Deserialize<T>(json);
+    }
+    
+    public static Packet CreateEmptyPacket(Command command)
+    {
+        return new Packet(command);
     }
 }
