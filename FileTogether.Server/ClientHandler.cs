@@ -164,9 +164,9 @@ public class ClientHandler
     }
     private void SendError(string message)
     {
-        var errorPacket = PacketBuilder.CreateTextPacket(Command.ERROR, "Unknown command");
+        var errorPacket = PacketBuilder.CreateTextPacket(Command.ERROR, message);
         NetworkHelper.SendPacket(_clientSocket, errorPacket);
-        Log($"Error sent: {"Unknown command"}");
+        Log($"Error sent: {message}");
     }
 
     private void Log(string message)

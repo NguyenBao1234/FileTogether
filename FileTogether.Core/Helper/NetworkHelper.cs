@@ -20,7 +20,7 @@ public class NetworkHelper
         }
     }
 
-    public static Packet ReceivePacket(Socket socket)
+    public static Packet? ReceivePacket(Socket socket)
     {
         try
         {
