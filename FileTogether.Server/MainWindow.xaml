@@ -6,7 +6,69 @@
         xmlns:local="clr-namespace:FileTogether.Server"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-
+    
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Server Settings -->
+        <GroupBox Header="Server Settings" Grid.Row="0" Padding="10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Port -->
+                <TextBlock Text="Port:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
+                <TextBox x:Name="TxtPort" Text="2121" Grid.Row="0" Grid.Column="1" 
+                         Margin="5,0" Height="25" VerticalContentAlignment="Center"/>
+                
+                <!-- Shared Folder -->
+                <TextBlock Text="Shared Folder:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Margin="0,10,0,0"/>
+                <TextBox x:Name="TxtSharedFolder" Grid.Row="1" Grid.Column="1" 
+                         Margin="5,10,5,0" Height="25" VerticalContentAlignment="Center"/>
+                <Button x:Name="BtnBrowse" Content="Browse..." Grid.Row="1" Grid.Column="2" 
+                        Width="80" Height="25" Margin="0,10,0,0" Click="BtnBrowse_Click"/>
+            </Grid>
+        </GroupBox>
+        
+        <!-- Server Status -->
+        <GroupBox Header="Server Status" Grid.Row="1" Padding="10" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Status: " FontWeight="Bold"/>
+                <TextBlock x:Name="TxtStatus" Text="Stopped" Foreground="Red"/>
+                <TextBlock Text=" | Clients: " FontWeight="Bold" Margin="20,0,0,0"/>
+                <TextBlock x:Name="TxtClientCount" Text="0"/>
+            </StackPanel>
+        </GroupBox>
+        
+        <!-- Logs -->
+        <GroupBox Header="Server Logs" Grid.Row="2" Padding="10">
+            <TextBox x:Name="TxtBoxLogs" 
+                     IsReadOnly="True" 
+                     VerticalScrollBarVisibility="Auto"
+                     TextWrapping="Wrap"
+                     FontFamily="Consolas"
+                     FontSize="12"
+                     Background="#F5F5F5"/>
+        </GroupBox>
+        
+        <!-- Control Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button x:Name="BtnStart" Content="Start Server" Width="120" Height="35" 
+                    Margin="0,0,10,0" Click="BtnStart_Click" FontWeight="Bold"/>
+            <Button x:Name="BtnStop" Content="Stop Server" Width="120" Height="35" 
+                    IsEnabled="False" Click="BtnStop_Click" FontWeight="Bold"/>
+        </StackPanel>
     </Grid>
 </Window>
