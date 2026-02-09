@@ -5,8 +5,107 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FileTogether.Client"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="650" Width="800">
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="150"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Connection Settings -->
+        <GroupBox Header="Connection" Grid.Row="0" Padding="10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Text="Server IP:" VerticalAlignment="Center" Grid.Column="0"/>
+                <TextBox x:Name="TxtServerIP" Text="127.0.0.1" Grid.Column="1" 
+                         Margin="5,0" Height="25" VerticalContentAlignment="Center"/>
+                
+                <TextBlock Text="Port:" VerticalAlignment="Center" Grid.Column="2" Margin="10,0,0,0"/>
+                <TextBox x:Name="TxtPort" Text="2121" Grid.Column="3" 
+                         Margin="5,0" Height="25" VerticalContentAlignment="Center"/>
+                
+                <TextBlock x:Name="TxtConnectionStatus" Text="Disconnected" 
+                           Foreground="Red" FontWeight="Bold" 
+                           VerticalAlignment="Center" Grid.Column="4" Margin="20,0,0,0"/>
+                
+                <Button x:Name="BtnConnect" Content="Connect" Width="100" Height="25" 
+                        Grid.Column="5" Margin="10,0,5,0" Click="BtnConnect_Click"/>
+                <Button x:Name="BtnDisconnect" Content="Disconnect" Width="100" Height="25" 
+                        Grid.Column="6" IsEnabled="False" Click="BtnDisconnect_Click"/>
+            </Grid>
+        </GroupBox>
+        
+        <!-- File List -->
+        <GroupBox Header="Server Files" Grid.Row="1" Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <DataGrid x:Name="FileDG" Grid.Row="0" 
+                          AutoGenerateColumns="False" 
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          GridLinesVisibility="All"
+                          Background="White">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="*"/>
+                        <DataGridTextColumn Header="Size" Binding="{Binding FormattedSize}" Width="120"/>
+                        <DataGridTextColumn Header="Last Modified" Binding="{Binding LastModified, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="150"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+                    <Button x:Name="BtnRefresh" Content="Refresh" Width="100" Height="30" 
+                            Margin="0,0,10,0" Click="BtnRefresh_Click"/>
+                    <Button x:Name="BtnDownload" Content="Download" Width="100" Height="30" 
+                            Margin="0,0,10,0" Click="BtnDownload_Click"/>
+                    <Button x:Name="BtnUpload" Content="Upload" Width="100" Height="30" 
+                            Margin="0,0,10,0" Click="BtnUpload_Click"/>
+                    <Button x:Name="BtnDelete" Content="Delete" Width="100" Height="30" 
+                            Click="BtnDelete_Click" Background="#FFE57373"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+        
+        <!-- Progress Bar -->
+        <GroupBox Header="Transfer Progress" Grid.Row="2" Padding="10" Margin="0,10,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="60"/>
+                </Grid.ColumnDefinitions>
+                
+                <ProgressBar x:Name="ProgressBar" Height="25" Grid.Column="0"/>
+                <TextBlock x:Name="TxtProgress" Text="0%" TextAlignment="Center" 
+                           VerticalAlignment="Center" Grid.Column="1" Margin="10,0,0,0" 
+                           FontWeight="Bold"/>
+            </Grid>
+        </GroupBox>
+        
+        <!-- Logs -->
+        <GroupBox Header="Activity Log" Grid.Row="3" Padding="10">
+            <TextBox x:Name="TxtBoxLogs" 
+                     IsReadOnly="True" 
+                     VerticalScrollBarVisibility="Auto"
+                     TextWrapping="Wrap"
+                     FontFamily="Consolas"
+                     FontSize="11"
+                     Background="#F5F5F5"/>
+        </GroupBox>
     </Grid>
 </Window>

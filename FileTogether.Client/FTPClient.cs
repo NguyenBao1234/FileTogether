@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Windows;
 using FileTogether.Core;
 using FileTogether.Core.Helper;
 using FileTogether.Core.Protocol;
@@ -17,12 +18,12 @@ public class FTPClient
     
     public bool IsConnected => bConnected;
 
-    public bool  Connect(int inIpAdress, int inPort)
+    public bool  Connect(string inIpAdress, int inPort)
     {
         try
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            var endpoint = new IPEndPoint(inIpAdress, inPort);
+            var endpoint = new IPEndPoint(IPAddress.Parse(inIpAdress), inPort);
             _socket.Connect(endpoint);
         
             bConnected = true;
@@ -33,6 +34,7 @@ public class FTPClient
         {
             Console.WriteLine(e);
             Log("Failed" + e.Message);
+            MessageBox.Show("Error: " + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
     }
@@ -56,17 +58,24 @@ public class FTPClient
     
     public List<FileInfo>? GetFileList()
     {
+        if (!bConnected)
+        {
+            Log("/GetFileList: Not connected to Server");
+            return null;
+        }
+        
         try
         {
-            if (!bConnected)
-            {
-                Log("Not connected to Server");
-                return null;
-            }
             var packet = PacketBuilder.CreateEmptyPacket(Command.LIST);
+            Log("Send command to " + _socket.RemoteEndPoint);
+
             NetworkHelper.SendPacket(_socket, packet);
-        
+
+
+            Log(" Waiting response of " + _socket.RemoteEndPoint);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
+            Log(" Start resolve response of " + _socket.RemoteEndPoint);
+            
             if (responseResult == null)
             {
                 Log("No Packet Received");
@@ -81,12 +90,14 @@ public class FTPClient
                 return null;
             }
 
-            if (responseResult.Command == Command.OK)
+            if (responseResult.Command == Command.FILE_LIST)
             {
+                Console.WriteLine(_socket.RemoteEndPoint + "'s response is OK, now getting list of files");
                 var files = PacketBuilder.GetObjectFromPacket<List<FileInfo>>(responseResult);
                 Log($"Found {files.Count} files");
                 return files;
             }
+            Log("response's command: "+responseResult.Command);
             return null;
         }
         catch (Exception e)
@@ -144,8 +155,8 @@ public class FTPClient
         {
             var file = new System.IO.FileInfo(filePath);
             var upRequest = new UploadRequest(file.Name, file.Length);
-            var Packet = PacketBuilder.CreateObjectPacket<UploadRequest>(Command.UPLOAD, upRequest);
-            NetworkHelper.SendPacket(_socket, Packet);
+            var packet = PacketBuilder.CreateObjectPacket<UploadRequest>(Command.UPLOAD, upRequest);
+            NetworkHelper.SendPacket(_socket, packet);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
 
             if (responseResult == null || responseResult.Command != Command.OK)
@@ -164,7 +175,7 @@ public class FTPClient
             }
 
             var responsePacket = NetworkHelper.ReceivePacket(_socket);
-            if (responsePacket != null && responsePacket?.Command == Command.OK)
+            if (responsePacket is { Command: Command.OK })
             {
                 Log($"Successfully Uploaded {filePath} bytes");
                 return true;
@@ -175,8 +186,9 @@ public class FTPClient
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
             Log("upload failed as exception");
+            MessageBox.Show(e.Message);
+            Console.WriteLine(e);
             return false;
         }
     }
@@ -223,7 +235,8 @@ public class FTPClient
 
     private void Log(string message)
     {
-        OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}] {message}");
+        OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}-FTP Client] {message}");
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}-FTP Client] {message}");
     }
     
 }

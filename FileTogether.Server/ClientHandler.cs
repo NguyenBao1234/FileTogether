@@ -30,6 +30,7 @@ public class ClientHandler
     private void HandleClient()
     {
         string clientIP = _clientSocket.RemoteEndPoint.ToString();
+        Log($"[ClientHandler/HandleClient] Thread started for {clientIP}");
         Log($"Client {clientIP} connected");
         
         while (true)
@@ -44,6 +45,7 @@ public class ClientHandler
     //Handle Client's Command
     private void HandleCommand(Packet packet)
     {
+        Log("[ClientHandler/Handle Command]start Handle Command");
         switch (packet.Command)
         {
             case Command.LIST:
@@ -67,6 +69,7 @@ public class ClientHandler
     
     private void HandleListFiles()
     {
+        Log("[ClientHandler/HandleListFiles]:Start");
         try
         {
             var files = Directory.GetFiles(_sharedFolder)
@@ -74,10 +77,10 @@ public class ClientHandler
                 .Select(fi => new FileTogether.Core.FileInfo(fi.Name, fi.Length, fi.LastWriteTime))
                 .ToList();
                 
-            var response = PacketBuilder.CreateObjectPacket(Command.FILE_LIST, files);
-            NetworkHelper.SendPacket(_clientSocket, response);
+            var fileListPacket = PacketBuilder.CreateObjectPacket(Command.FILE_LIST, files);
+            NetworkHelper.SendPacket(_clientSocket, fileListPacket);
                 
-            Log($"Sent file list: {files.Count} files");
+            Log($"[ClientHandler/HandleListFiles] Sent file list: {files.Count} files");
         }
         catch (Exception ex)
         {
@@ -172,5 +175,6 @@ public class ClientHandler
     private void Log(string message)
     {
         OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}] {message}");
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
     }
 }

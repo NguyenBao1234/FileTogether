@@ -68,7 +68,7 @@ public class FTPServer
                     OnClientCountChanged?.Invoke(_clientHandlers.Count);
                 }
                 clientHandler.Start();
-                Log($"New client accepted. Total clients: {_clientHandlers.Count}");
+                Log($"New client accepted. Setup handler for {clientSk.LocalEndPoint}");
             }
             catch (Exception e)
             {

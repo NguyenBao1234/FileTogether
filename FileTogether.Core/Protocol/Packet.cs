@@ -25,7 +25,7 @@ public class Packet
             
         if (Data.Length > 0) 
             Array.Copy(Data, 0, result, 5, Data.Length);
-            
+        Console.WriteLine($"[Packet.ToBytes] Result: [{string.Join(", ", result)}]");
         return result;
     }
     
