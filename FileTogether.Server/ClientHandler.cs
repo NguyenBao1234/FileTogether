@@ -30,8 +30,8 @@ public class ClientHandler
     private void HandleClient()
     {
         string clientIP = _clientSocket.RemoteEndPoint.ToString();
-        Log($"[ClientHandler/HandleClient] Thread started for {clientIP}");
-        Log($"Client {clientIP} connected");
+        Log($"[/HandleClient] Thread started for {clientIP}");
+        Log($"[HandleClient] {clientIP} connected");
         
         while (true)
         {
@@ -45,7 +45,7 @@ public class ClientHandler
     //Handle Client's Command
     private void HandleCommand(Packet packet)
     {
-        Log("[ClientHandler/Handle Command]start Handle Command");
+        Log("/Handle Command]start Handle Command");
         switch (packet.Command)
         {
             case Command.LIST:
@@ -69,7 +69,7 @@ public class ClientHandler
     
     private void HandleListFiles()
     {
-        Log("[ClientHandler/HandleListFiles]:Start");
+        Log("[/HandleListFiles]:Start");
         try
         {
             var files = Directory.GetFiles(_sharedFolder)
@@ -80,7 +80,7 @@ public class ClientHandler
             var fileListPacket = PacketBuilder.CreateObjectPacket(Command.FILE_LIST, files);
             NetworkHelper.SendPacket(_clientSocket, fileListPacket);
                 
-            Log($"[ClientHandler/HandleListFiles] Sent file list: {files.Count} files");
+            Log($"[/HandleListFiles] Sent file list: {files.Count} files");
         }
         catch (Exception ex)
         {
@@ -89,6 +89,7 @@ public class ClientHandler
     }
     private void HandleUpload(Packet packet)
     {
+        Log("[/HandleUpload]:Start");
         var uploadRequest = PacketBuilder.GetObjectFromPacket<UploadRequest>(packet);
         string fileName = uploadRequest.FileName;
         string savePath = Path.Combine(_sharedFolder, fileName);
@@ -112,6 +113,7 @@ public class ClientHandler
 
     private void HandleDownload(Packet packet)
     {
+        Log("[/HandleDownload]:Start");
         try
         {
             string fileName = PacketBuilder.GetTextFromPacket(packet);
@@ -119,7 +121,7 @@ public class ClientHandler
                 
             if (!File.Exists(filePath))
             {
-                SendError("File not found");
+                SendError($"No File found has filepath: {filePath}");
                 return;
             }
                 
@@ -133,7 +135,7 @@ public class ClientHandler
             // Gửi file data
             NetworkHelper.SendFile(_clientSocket, filePath);
                 
-            Log($"Sent file: {fileName} ({fileInfo.Length} bytes)");
+            Log($"Handle Download Finished: Sent file {fileName} ({fileInfo.Length} bytes)");
         }
         catch (Exception ex)
         {
@@ -143,6 +145,7 @@ public class ClientHandler
 
     private void HandleDelete(Packet packet)
     {
+        Log("[/HandleDelete]:Start");
         try
         {
             string fileName = PacketBuilder.GetTextFromPacket(packet);
@@ -153,7 +156,7 @@ public class ClientHandler
                 File.Delete(filePath);
                 NetworkHelper.SendPacket(_clientSocket, 
                     PacketBuilder.CreateEmptyPacket(Command.OK));
-                Log($"Deleted file: {fileName}");
+                Log($"Handle Delete Finished: Deleted file0 '{fileName}'");
             }
             else
             {
@@ -167,14 +170,14 @@ public class ClientHandler
     }
     private void SendError(string message)
     {
+        Log($"Error sent: {message}");
         var errorPacket = PacketBuilder.CreateTextPacket(Command.ERROR, message);
         NetworkHelper.SendPacket(_clientSocket, errorPacket);
-        Log($"Error sent: {message}");
     }
 
     private void Log(string message)
     {
-        OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}] {message}");
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
+        OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}-ClientHandler] {message}");
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}-ClientHandler] {message}");
     }
 }

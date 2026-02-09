@@ -62,7 +62,7 @@ public partial class MainWindow : Window
         bool bConnectSuccess = _client.Connect(serverIP, port);
         if (bConnectSuccess)
         {
-            //RefreshFileList();
+            RefreshFileList();
             Console.WriteLine("Successfully connected to server");
         }
         else

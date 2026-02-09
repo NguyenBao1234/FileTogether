@@ -114,13 +114,14 @@ public class FTPClient
 
         try
         {
-            var Packet = PacketBuilder.CreateEmptyPacket(Command.DOWNLOAD);
-            NetworkHelper.SendPacket(_socket, Packet);
+            var packet = PacketBuilder.CreateTextPacket(Command.DOWNLOAD, fileName);
+            NetworkHelper.SendPacket(_socket, packet);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
         
             if (responseResult == null || responseResult.Command != Command.OK)
             {
                 Log("Server rejected upload");
+                if (responseResult is { Command: Command.ERROR }) Log(PacketBuilder.GetTextFromPacket(responseResult));
                 return false;
             }
 
