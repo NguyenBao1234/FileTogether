@@ -13,10 +13,16 @@ public class FTPClient
     private Socket _socket;
     private bool bConnected;
     
+    private bool _isAuthenticated;
+    private string _sessionToken;
+    private User _currentUser;
+    
     public event Action<string> OnLog;
     public event Action<bool> OnConnectionChanged;
     
     public bool IsConnected => bConnected;
+    public bool IsAuthenticated => _isAuthenticated; 
+    public User CurrentUser => _currentUser;
 
     public bool  Connect(string inIpAdress, int inPort)
     {

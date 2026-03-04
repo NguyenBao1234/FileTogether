@@ -12,12 +12,18 @@ public class ClientHandler
     private string _sharedFolder;
     private Thread _thread;
     
+    private SessionManager _sessionManager;
+    private UserManager _userManager;
+    private Session? _currentSession;
     public event Action<string> OnLog;
     
-    public ClientHandler(Socket clientSocket, string sharedFolder)
+    public ClientHandler(Socket clientSocket, string sharedFolder, SessionManager sessionManager, UserManager userManager)
     {
         _clientSocket = clientSocket;
         _sharedFolder = sharedFolder;
+        _sessionManager = sessionManager;
+        _userManager = userManager;
+        _currentSession = null; //not login yet
     }
 
     public void Start()
@@ -32,13 +38,32 @@ public class ClientHandler
         string clientIP = _clientSocket.RemoteEndPoint.ToString();
         Log($"[/HandleClient] Thread started for {clientIP}");
         Log($"[HandleClient] {clientIP} connected");
-        
-        while (true)
+
+        try
         {
-            Packet packet = NetworkHelper.ReceivePacket(_clientSocket);
-            if (packet == null) break; // Client disconnect
+            while (true)
+            {
+                Packet packet = NetworkHelper.ReceivePacket(_clientSocket);
+                if (packet == null) break; // Client disconnect
             
-            HandleCommand(packet);
+                HandleCommand(packet);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Error with {clientIP}: {ex.Message}");
+        }
+        finally
+        {
+            if (_currentSession != null)
+            {
+                Log($"Cleaning up session for user '{_currentSession.User.Username}'");
+                _sessionManager.RemoveSession(_currentSession.Token);
+                _currentSession = null;
+            }
+        
+            _clientSocket.Close();
+            Log($"Client disconnected: {clientIP}");
         }
     }
 
@@ -46,27 +71,112 @@ public class ClientHandler
     private void HandleCommand(Packet packet)
     {
         Log("/Handle Command]start Handle Command");
+        // LOGIN không cần authenticate
+        if (packet.Command == Command.LOGIN)
+        {
+            HandleLogin(packet);
+            return;
+        }
+    
+        // LOGOUT không cần authenticate (có thể logout khi đã logout)
+        if (packet.Command == Command.LOGOUT)
+        {
+            HandleLogout();
+            return;
+        }
+
+        if (_currentSession == null)
+        {
+            SendUnauthorized("Not logged in");
+            return;
+        }
+        
+        HandleAuthorizedCommand(packet);
+    }
+
+    private void HandleLogin(Packet packet)
+    {
+        try
+        {
+            // Parse LoginRequest từ packet
+            var loginRequest = PacketBuilder.GetObjectFromPacket<LoginRequest>(packet);
+        
+            Log($"Login attempt: {loginRequest.Username}");
+        
+            // Authenticate
+            var user = _userManager.AuthenticateUser(loginRequest.Username, loginRequest.Password);
+        
+            if (user != null)
+            {
+                // Tạo session
+                string clientIP = _clientSocket.RemoteEndPoint.ToString();
+                string token = _sessionManager.CreateSession(user, clientIP);
+            
+                _currentSession = _sessionManager.GetSession(token);
+            
+                // Gửi response thành công
+                var response = new LoginResponse(true, "Login successful", token, user.Role);
+                var responsePacket = PacketBuilder.CreateObjectPacket(Command.LOGIN_RESPONSE, response);
+                NetworkHelper.SendPacket(_clientSocket, responsePacket);
+            
+                Log($"User '{user.Username}' (Role: {user.Role}) logged in successfully");
+            }
+            else
+            {
+                // Gửi response thất bại
+                var response = new LoginResponse(false, "Invalid username or password");
+                var responsePacket = PacketBuilder.CreateObjectPacket(Command.LOGIN_RESPONSE, response);
+                NetworkHelper.SendPacket(_clientSocket, responsePacket);
+            
+                Log($"Failed login attempt for: {loginRequest.Username}");
+            }
+        }
+        catch (Exception ex)
+        {
+            SendError($"Login error: {ex.Message}");
+            Log($"Login error: {ex.Message}");
+        }
+    }
+    
+    private void HandleLogout()
+    {
+        if (_currentSession != null)
+        {
+            Log($"User '{_currentSession.User.Username}' logging out");
+        
+            _sessionManager.RemoveSession(_currentSession.Token);
+            _currentSession = null;
+        
+            NetworkHelper.SendPacket(_clientSocket, 
+                PacketBuilder.CreateEmptyPacket(Command.OK));
+        
+            Log("User logged out successfully");
+        }
+    }
+
+    private void HandleAuthorizedCommand(Packet packet)
+    {
         switch (packet.Command)
         {
             case Command.LIST:
                 HandleListFiles();
                 break;
             case Command.UPLOAD:
-                HandleUpload(packet);
+                if(_currentSession.User.Role >= UserRole.PowerUser) HandleUpload(packet);
+                else SendUnauthorized("You don't have permission to upload");
                 break;
             case Command.DOWNLOAD:
                 HandleDownload(packet);
                 break;
             case Command.DELETE:
-                HandleDelete(packet);
+                if(_currentSession.User.Role >= UserRole.PowerUser) HandleDelete(packet);
+                else SendUnauthorized("You don't have permission to delete");
                 break;
             default:
                 SendError("Unknown command");
                 break;
-
         }
     }
-    
     private void HandleListFiles()
     {
         Log("[/HandleListFiles]:Start");
@@ -99,7 +209,7 @@ public class ClientHandler
         
         // Nhận file
         bool success = NetworkHelper.ReceiveFile(_clientSocket, savePath, uploadRequest.FileSize);
-                
+        
         if (success)
         {
             Log($"Received file: {fileName} ");
@@ -127,9 +237,8 @@ public class ClientHandler
                 
             var fileInfo = new System.IO.FileInfo(filePath);
                 
-            // Gửi OK + file size
-            var okPacket = PacketBuilder.CreateTextPacket(Command.OK, 
-                fileInfo.Length.ToString());
+            // Gửi OK + file size first to client know size to pass parameter
+            var okPacket = PacketBuilder.CreateTextPacket(Command.OK, fileInfo.Length.ToString());
             NetworkHelper.SendPacket(_clientSocket, okPacket);
                 
             // Gửi file data
@@ -173,6 +282,13 @@ public class ClientHandler
         Log($"Error sent: {message}");
         var errorPacket = PacketBuilder.CreateTextPacket(Command.ERROR, message);
         NetworkHelper.SendPacket(_clientSocket, errorPacket);
+    }
+    
+    private void SendUnauthorized(string message)
+    {
+        var packet = PacketBuilder.CreateTextPacket(Command.UNAUTHORIZED, message);
+        NetworkHelper.SendPacket(_clientSocket, packet);
+        Log($"Unauthorized: {message}");
     }
 
     private void Log(string message)

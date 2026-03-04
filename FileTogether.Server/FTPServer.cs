@@ -12,6 +12,9 @@ public class FTPServer
     private int _port;
     
     private List<ClientHandler>  _clientHandlers =  new List<ClientHandler>();
+
+    private UserManager _userManager;
+    private SessionManager _sessionManager;
     
     public event Action<string> OnLog; // Event ghi log lên UI
     public event Action<int> OnClientCountChanged; // Event báo số client thay đổi
@@ -19,6 +22,8 @@ public class FTPServer
     public bool IsRunning => bRunning;
     public int Port => _port;
     public string ShareFolder => _sharedFolder;
+    
+    private System.Threading.Timer _sessionCleanupTimer;
     
     public FTPServer(int port, string sharedFolder)
     {
@@ -47,6 +52,23 @@ public class FTPServer
                 
             Log($"Server started on port {_port}");
             Log($"Shared folder: {_sharedFolder}");
+            
+            string userFilePath = System.IO.Path.Combine(_sharedFolder, "users.json");
+            _userManager = new UserManager(userFilePath);
+            _sessionManager = new SessionManager();
+            
+            _sessionCleanupTimer = new System.Threading.Timer(
+                callback: _ => {
+                    _sessionManager.CleanupExpiredSessions(30); // 30 phút timeout
+                    Log("Expired sessions cleaned up");
+                },
+                state: null,
+                dueTime: TimeSpan.FromMinutes(5),
+                period: TimeSpan.FromMinutes(5)
+            );
+        
+            Log("User manager initialized");
+            Log("Default users: admin/admin123 (Admin), user/user123 (User)");
         }
         catch (Exception ex)
         {
@@ -61,7 +83,7 @@ public class FTPServer
             try
             {
                 var clientSk =  _listenerSocket.Accept();
-                var clientHandler = new ClientHandler(clientSk, _sharedFolder);
+                var clientHandler = new ClientHandler(clientSk, _sharedFolder, _sessionManager, _userManager);
                 lock (_clientHandlers)
                 {
                     _clientHandlers.Add(clientHandler);
@@ -80,6 +102,7 @@ public class FTPServer
     private void Log(string message)
     {
         OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}] {message}");
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
     }
 
     public void Stop()
@@ -90,6 +113,7 @@ public class FTPServer
             
         try
         {
+            _sessionCleanupTimer?.Dispose();
             _listenerSocket?.Close();
             
             lock (_clientHandlers)
