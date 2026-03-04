@@ -105,9 +105,10 @@ public class ClientHandler
         
             // Authenticate
             var user = _userManager.AuthenticateUser(loginRequest.Username, loginRequest.Password);
-        
+            Log($"Finish Authenticate");
             if (user != null)
             {
+                Log($"Start session for {loginRequest.Username}");
                 // Tạo session
                 string clientIP = _clientSocket.RemoteEndPoint.ToString();
                 string token = _sessionManager.CreateSession(user, clientIP);

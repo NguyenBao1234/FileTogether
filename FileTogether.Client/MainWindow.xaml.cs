@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.ComponentModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -24,23 +25,32 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        _client = new FTPClient();
-        _client.OnLog += (msg) => Dispatcher.Invoke( () => AppendLogUI(msg));
-        _client.OnConnectionChanged += (bConnect)  => Dispatcher.Invoke( () => UpdateConnecctionStateUI(bConnect));
+        ShowLoginWindow();
     }
 
     private void UpdateConnecctionStateUI(bool bConnect)
     {
         TxtConnectionStatus.Text = bConnect ? "Connected" : "Disconnected";
         TxtConnectionStatus.Foreground = bConnect ? Brushes.Green : Brushes.Red;
-        BtnConnect.IsEnabled = !bConnect;
-        BtnDisconnect.IsEnabled = bConnect;
+
         TxtServerIP.IsEnabled = !bConnect;
         TxtPort.IsEnabled = !bConnect;
         BtnRefresh.IsEnabled = bConnect;
+
+        
+        txtCurrentUser.Text = _client.CurrentUser.Username;
+        txtCurrentUser.Foreground = Brushes.Black;
+            
+        txtCurrentRole.Text = _client.CurrentUser.Role.ToString();
+        txtCurrentRole.Foreground = GetRoleColor(_client.CurrentUser.Role);
+            
+        BtnLogout.IsEnabled = bConnect;
         BtnDownload.IsEnabled = bConnect;
-        BtnUpload.IsEnabled = bConnect;
-        BtnDelete.IsEnabled = bConnect;
+            
+        // Chỉ enable upload/delete nếu có quyền
+        if (!bConnect) return;
+        BtnUpload.IsEnabled = _client.CurrentUser.Role >= UserRole.PowerUser;
+        BtnDelete.IsEnabled = _client.CurrentUser.Role == UserRole.Admin;
         
     }
 
@@ -222,5 +232,61 @@ public partial class MainWindow : Window
             FileDG.ItemsSource = displayFiles;//Data grid
         }
 
+    }
+
+    private void BtnLogout_Click(object sender, RoutedEventArgs e)
+    {
+        var result = MessageBox.Show(
+            "Are you sure you want to logout?",
+            "Confirm Logout",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+            
+        if (result == MessageBoxResult.Yes)
+        {
+            _client?.Disconnect();
+                
+            // Hiển thị login window lại
+            ShowLoginWindow();
+        }
+    }
+
+    private void ShowLoginWindow()
+    {
+        var loginWindow = new LoginWindow();
+        bool? result = loginWindow.ShowDialog();
+            
+        if (result == true && loginWindow.LoginSuccessful)
+        {
+            // Login thành công
+            _client = loginWindow.Client;
+            _client.OnLog += (msg) => Dispatcher.Invoke( () => AppendLogUI(msg));
+            _client.OnConnectionChanged += (bConnect)  => Dispatcher.Invoke( () => UpdateConnecctionStateUI(bConnect));//call back if server off
+            UpdateConnecctionStateUI(true);
+            
+            // Load file list
+            RefreshFileList();
+        }
+        else
+        {
+            // User cancel hoặc login fail → đóng app
+            Application.Current.Shutdown();
+        }
+    }
+
+    private Brush GetRoleColor(UserRole inUserRole)
+    {
+        return inUserRole switch
+        {
+            UserRole.Admin => Brushes.Green,
+            UserRole.PowerUser => Brushes.Blue,
+            _ => Brushes.Gray
+        };
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        _client?.Disconnect();
+        base.OnClosing(e);
     }
 }

@@ -13,15 +13,15 @@ public class FTPClient
     private Socket _socket;
     private bool bConnected;
     
-    private bool _isAuthenticated;
-    private string _sessionToken;
-    private User _currentUser;
+    private bool bAuthenticated;
+    private string? _sessionToken;
+    private User? _currentUser;
     
     public event Action<string> OnLog;
     public event Action<bool> OnConnectionChanged;
     
     public bool IsConnected => bConnected;
-    public bool IsAuthenticated => _isAuthenticated; 
+    public bool IsAuthenticated => bAuthenticated; 
     public User CurrentUser => _currentUser;
 
     public bool  Connect(string inIpAdress, int inPort)
@@ -45,6 +45,51 @@ public class FTPClient
         }
     }
 
+    public LoginResponse Login(string username, string password)
+    {
+        if (!bConnected)
+        {
+            Log("Not connected to server");
+            return new LoginResponse(false, "Not connected to server");
+        }
+        // make LoginRequest
+        var loginRequest = new LoginRequest(username, password);
+        var packet = PacketBuilder.CreateObjectPacket(Command.LOGIN, loginRequest);
+        Log($"Sending login request for user: {username}");
+        NetworkHelper.SendPacket(_socket, packet);
+        
+        var response = NetworkHelper.ReceivePacket(_socket);
+        if (response == null)
+        {
+            Log("Connection lost");
+            Disconnect();
+            return new LoginResponse(false, "Connection lost");
+        }
+        if (response.Command == Command.LOGIN_RESPONSE)
+        {
+            Log("Start Parse Login Response");
+            var loginResponse = PacketBuilder.GetObjectFromPacket<LoginResponse>(response);//parse packet
+            var bSuccess = loginResponse.Success;
+
+            bAuthenticated = bSuccess;
+            _sessionToken = bSuccess ? loginResponse.SessionToken : null;
+            _currentUser =  bSuccess ? new User(username, "", loginResponse.Role) : null;
+            
+            string msg = loginResponse.Message;
+            Log($"Login successful. {msg}");
+            
+            return loginResponse;
+        }
+        if (response.Command == Command.ERROR)
+        {
+            string error = PacketBuilder.GetTextFromPacket(response);
+            Log($"Login error: {error}");
+            return new LoginResponse(false, error);
+        }
+        
+        return new LoginResponse(false, "Unexpected response from server");
+    }
+
     public void Disconnect()
     {
         if (!bConnected) return;
@@ -53,6 +98,9 @@ public class FTPClient
             _socket.Close();
             bConnected = false;
             OnConnectionChanged?.Invoke(false);
+            bAuthenticated = false;
+            _sessionToken = null;
+            _currentUser = null;
             Log("Disconnected");
         }
         catch (Exception e)
@@ -62,11 +110,38 @@ public class FTPClient
         }
     }
     
+    public bool Logout()
+    {
+        if (!bConnected || !bAuthenticated) return false;
+    
+        try
+        {
+            var packet = PacketBuilder.CreateEmptyPacket(Command.LOGOUT);
+            NetworkHelper.SendPacket(_socket, packet);
+        
+            var response = NetworkHelper.ReceivePacket(_socket);
+        
+            bAuthenticated = false;
+            _sessionToken = null;
+            _currentUser = null;
+        
+            Log("Logged out successfully");
+        
+            return response != null && response.Command == Command.OK;
+        }
+        catch (Exception ex)
+        {
+            Log($"Logout error: {ex.Message}");
+            return false;
+        }
+        
+    }
+    
     public List<FileInfo>? GetFileList()
     {
-        if (!bConnected)
+        if (!bConnected||!bAuthenticated)
         {
-            Log("/GetFileList: Not connected to Server");
+            Log("/GetFileList: Not authenticated or connected to Server");
             return null;
         }
         
@@ -81,14 +156,22 @@ public class FTPClient
             Log(" Waiting response of " + _socket.RemoteEndPoint);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
             Log(" Start resolve response of " + _socket.RemoteEndPoint);
-            
+            //Check if ex error
             if (responseResult == null)
             {
                 Log("No Packet Received");
                 Disconnect();
                 return null;
             }
-        
+            //Check if unauthorized
+            if (responseResult.Command == Command.UNAUTHORIZED)
+            {
+                string msg = PacketBuilder.GetTextFromPacket(responseResult);
+                Log($"Unauthorized: {msg}");
+                bAuthenticated = false;
+                return null;
+            }
+            
             if (responseResult.Command == Command.ERROR)
             {
                 string error = PacketBuilder.GetTextFromPacket(responseResult);
@@ -116,7 +199,11 @@ public class FTPClient
 
     public bool DownloadFile(string fileName, string savePath, IProgress<int> progress = null )
     {
-        if (!bConnected) return false;
+        if (!bConnected||!bAuthenticated)
+        {
+            Log("/GetFileList: Not authenticated or connected to Server");
+            return false;
+        }
 
         try
         {
@@ -157,7 +244,11 @@ public class FTPClient
 
     public bool UploadFile(string filePath, IProgress<int> progress = null)
     {
-        if (!bConnected) return false;
+        if (!bConnected||!bAuthenticated)
+        {
+            Log("/GetFileList: Not authenticated or connected to Server");
+            return false;
+        }
         try
         {
             var file = new System.IO.FileInfo(filePath);
@@ -202,7 +293,11 @@ public class FTPClient
 
     public bool DeleteFile(string fileName)
     {
-        if (!bConnected) return false;
+        if (!bConnected||!bAuthenticated)
+        {
+            Log("/GetFileList: Not authenticated or connected to Server");
+            return false;
+        }
         try
         {
             var packet = PacketBuilder.CreateTextPacket(Command.DELETE, fileName);
