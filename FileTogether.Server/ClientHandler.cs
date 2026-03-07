@@ -71,14 +71,19 @@ public class ClientHandler
     private void HandleCommand(Packet packet)
     {
         Log("/Handle Command]start Handle Command");
-        // LOGIN không cần authenticate
+
+        if (packet.Command == Command.REGISTER)
+        {
+            HandleRegister(packet);
+            return;
+        }
+
         if (packet.Command == Command.LOGIN)
         {
             HandleLogin(packet);
             return;
         }
-    
-        // LOGOUT không cần authenticate (có thể logout khi đã logout)
+        
         if (packet.Command == Command.LOGOUT)
         {
             HandleLogout();
@@ -94,12 +99,65 @@ public class ClientHandler
         HandleAuthorizedCommand(packet);
     }
 
+    private void HandleRegister(Packet packet)
+    {
+        try
+        {
+            var registerRequest = PacketBuilder.GetObjectFromPacket<AccountCredentialRequest>(packet);
+            Log($"Registration attempt: {registerRequest.Username}");
+        
+            // Validate username
+            if (string.IsNullOrWhiteSpace(registerRequest.Username))
+            {
+                SendRegisterResponse(false, "Username cannot be empty");
+                return;
+            }
+            
+            if (registerRequest.Username.Length is < 3 or > 20)
+            {
+                SendRegisterResponse(false, "Username must be at least 3 characters and not exceed 20 characters");
+                return;
+            }
+        
+            // Validate password
+            if (string.IsNullOrWhiteSpace(registerRequest.Password))
+            {
+                SendRegisterResponse(false, "Password cannot be empty");
+                return;
+            }
+        
+            if (registerRequest.Password.Length < 6)
+            {
+                SendRegisterResponse(false, "Password must be at least 6 characters");
+                return;
+            }
+        
+            // Tạo user mới vào hệ thống
+            bool success = _userManager.AddUser(registerRequest.Username, registerRequest.Password, UserRole.User);
+            if (success)
+            {
+                SendRegisterResponse(true, "Registration successful! You can now login.");
+                Log($"User '{registerRequest.Username}' registered successfully");
+            }
+            else
+            {
+                SendRegisterResponse(false, "Username already exists");
+                Log($"Registration failed: Username '{registerRequest.Username}' already exists");
+            }
+        }
+        catch (Exception e)
+        {
+            Log("Registration error: "+ e.Message);
+            SendRegisterResponse(false, e.Message);
+        }
+    }
+
     private void HandleLogin(Packet packet)
     {
         try
         {
             // Parse LoginRequest từ packet
-            var loginRequest = PacketBuilder.GetObjectFromPacket<LoginRequest>(packet);
+            var loginRequest = PacketBuilder.GetObjectFromPacket<AccountCredentialRequest>(packet);
         
             Log($"Login attempt: {loginRequest.Username}");
         
@@ -290,6 +348,13 @@ public class ClientHandler
         var packet = PacketBuilder.CreateTextPacket(Command.UNAUTHORIZED, message);
         NetworkHelper.SendPacket(_clientSocket, packet);
         Log($"Unauthorized: {message}");
+    }
+    
+    private void SendRegisterResponse(bool success, string message)
+    {
+        var response = new RegisterResponse(success, message);
+        var packet = PacketBuilder.CreateObjectPacket(Command.REGISTER_RESPONSE, response);
+        NetworkHelper.SendPacket(_clientSocket, packet);
     }
 
     private void Log(string message)

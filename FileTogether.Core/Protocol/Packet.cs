@@ -1,5 +1,7 @@
 namespace FileTogether.Core.Protocol;
-
+/// <summary>
+/// Packet contain: command + data 
+/// </summary>
 [Serializable]
 public class Packet
 {

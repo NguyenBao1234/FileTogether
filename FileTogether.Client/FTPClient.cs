@@ -53,7 +53,7 @@ public class FTPClient
             return new LoginResponse(false, "Not connected to server");
         }
         // make LoginRequest
-        var loginRequest = new LoginRequest(username, password);
+        var loginRequest = new AccountCredentialRequest(username, password);
         var packet = PacketBuilder.CreateObjectPacket(Command.LOGIN, loginRequest);
         Log($"Sending login request for user: {username}");
         NetworkHelper.SendPacket(_socket, packet);
@@ -340,5 +340,50 @@ public class FTPClient
         OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}-FTP Client] {message}");
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}-FTP Client] {message}");
     }
-    
+
+    public RegisterResponse Register(string username, string password)
+    {
+        if (!bConnected)
+        {
+            Log("Not connected to server");
+            return new RegisterResponse(false, "Not connected to server");
+        }
+
+        try
+        {
+            var registerRequest = new AccountCredentialRequest(username, password);
+            var packet = PacketBuilder.CreateObjectPacket(Command.REGISTER, registerRequest);
+        
+            NetworkHelper.SendPacket(_socket, packet);
+            var responsePacket = NetworkHelper.ReceivePacket(_socket);
+
+            if (responsePacket == null)
+            {
+                Log("Connection lost");
+                Disconnect();
+                return new RegisterResponse(false, "Connection lost");
+            }
+
+            if (responsePacket.Command == Command.REGISTER_RESPONSE)
+            {
+                var registerResponse = PacketBuilder.GetObjectFromPacket<RegisterResponse>(responsePacket);
+
+                Log(registerResponse.Success ? "Registration successful" : $"Registration failed: {registerResponse.Message}");
+            
+                return registerResponse;
+            }
+            if (responsePacket.Command == Command.ERROR)
+            {
+                string errorMsg = PacketBuilder.GetTextFromPacket(responsePacket);
+                Log($"Registration failed: {errorMsg}");
+                return new RegisterResponse(false, $"Registration failed {errorMsg}");
+            }
+            return new RegisterResponse(false, "Unexpected response from server");
+        }
+        catch (Exception e)
+        {
+            Log("Registration failed as exception " + e.Message);
+            return new RegisterResponse(false, $"Unexpected response from server: {e.Message}");
+        }
+    }
 }

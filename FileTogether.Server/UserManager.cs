@@ -35,7 +35,7 @@ public class UserManager
         }
     }
 
-    private bool AddUser(string inUserName, string inPassword, UserRole inRole)
+    public bool AddUser(string inUserName, string inPassword, UserRole inRole)
     {
         string lowerUsername = inUserName.ToLower();
         

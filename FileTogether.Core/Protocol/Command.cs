@@ -18,6 +18,8 @@ public enum Command : byte
     LOGIN = 20,          // Client gửi username/password
     LOGIN_RESPONSE = 21, // Server trả kết quả login
     LOGOUT = 22,         // Client đăng xuất
+    REGISTER = 23,           
+    REGISTER_RESPONSE = 24,
     
     // Directory operations
     CREATE_DIR = 30,    // Tạo thư mục

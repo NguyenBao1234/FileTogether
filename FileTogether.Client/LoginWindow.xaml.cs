@@ -113,4 +113,17 @@ public partial class LoginWindow : Window
     {
         DialogResult = false;
     }
+
+    private void BtnRegister_Click(object sender, RoutedEventArgs e)
+    {
+        var registerWindow = new RegisterWindow();
+        registerWindow.Owner = this;
+        
+        bool? result = registerWindow.ShowDialog();
+        Console.WriteLine("Register Window = " + result);
+
+        if (result != true) return;
+        txtStatus.Text = "Registration successful! Please login.";
+        txtStatus.Foreground = System.Windows.Media.Brushes.Green;
+    }
 }
