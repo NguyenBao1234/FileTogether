@@ -20,7 +20,7 @@
         </Grid.RowDefinitions>
         
         <!-- Title -->
-        <TextBlock Grid.Row="0" Text="FTP Server Login" 
+        <TextBlock Grid.Row="0" Text="File Together Login" 
                    FontSize="20" FontWeight="Bold" 
                    HorizontalAlignment="Center"/>
         

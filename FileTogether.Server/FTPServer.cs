@@ -1,5 +1,10 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Windows;
+using FileTogether.Core.Helper;
+using FileTogether.Core.Protocol;
+using Application = System.Windows.Forms.Application;
+using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace FileTogether.Server;
 
@@ -83,14 +88,34 @@ public class FTPServer
             try
             {
                 var clientSk =  _listenerSocket.Accept();
-                var clientHandler = new ClientHandler(clientSk, _sharedFolder, _sessionManager, _userManager);
-                lock (_clientHandlers)
+                string remoteIp = clientSk.RemoteEndPoint.ToString();
+                
+                bool allowConnection = false;
+                
+
+                var result = MessageBox.Show($"Connect Request: {remoteIp}\n Do you accept?", "Connect Request",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                allowConnection = (result == DialogResult.Yes);
+                
+                if (!allowConnection)
                 {
-                    _clientHandlers.Add(clientHandler);
-                    OnClientCountChanged?.Invoke(_clientHandlers.Count);
+                    var declineResponse = PacketBuilder.CreateTextPacket(Command.ERROR,"Server decline your connect request");
+                    NetworkHelper.SendPacket(clientSk, declineResponse);
+                    Log($"Decline {remoteIp}.");
                 }
-                clientHandler.Start();
-                Log($"New client accepted. Setup handler for {clientSk.LocalEndPoint}");
+                else
+                {
+                    var clientHandler = new ClientHandler(clientSk, _sharedFolder, _sessionManager, _userManager);
+                    lock (_clientHandlers)
+                    {
+                        _clientHandlers.Add(clientHandler);
+                        OnClientCountChanged?.Invoke(_clientHandlers.Count);
+                    }
+                    clientHandler.Start();
+                    Log($"New client accepted. Setup handler for {clientSk.LocalEndPoint}");    
+                }
+                
             }
             catch (Exception e)
             {

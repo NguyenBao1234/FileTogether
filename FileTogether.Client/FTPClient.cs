@@ -61,9 +61,9 @@ public class FTPClient
         var response = NetworkHelper.ReceivePacket(_socket);
         if (response == null)
         {
-            Log("Connection lost");
+            Log("Connection lost or Server decline connect");
             Disconnect();
-            return new LoginResponse(false, "Connection lost");
+            return new LoginResponse(false, "Connection lost or Server decline connect");
         }
         if (response.Command == Command.LOGIN_RESPONSE)
         {
