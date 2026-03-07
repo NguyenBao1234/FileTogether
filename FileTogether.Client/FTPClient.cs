@@ -95,6 +95,7 @@ public class FTPClient
         if (!bConnected) return;
         try
         {
+            if(bAuthenticated) Logout();
             _socket.Close();
             bConnected = false;
             OnConnectionChanged?.Invoke(false);

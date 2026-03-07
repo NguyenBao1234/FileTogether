@@ -286,6 +286,7 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(CancelEventArgs e)
     {
+        Console.WriteLine("Close Application");
         _client?.Disconnect();
         base.OnClosing(e);
     }

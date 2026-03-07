@@ -12,17 +12,20 @@ public class ClientHandler
     private string _sharedFolder;
     private Thread _thread;
     
+    private FTPServer _ftpServer;
     private SessionManager _sessionManager;
     private UserManager _userManager;
     private Session? _currentSession;
     public event Action<string> OnLog;
     
-    public ClientHandler(Socket clientSocket, string sharedFolder, SessionManager sessionManager, UserManager userManager)
+    public ClientHandler(Socket clientSocket, string sharedFolder, SessionManager sessionManager,
+        UserManager userManager, FTPServer ftpServer)
     {
         _clientSocket = clientSocket;
         _sharedFolder = sharedFolder;
         _sessionManager = sessionManager;
         _userManager = userManager;
+        _ftpServer = ftpServer;
         _currentSession = null; //not login yet
     }
 
@@ -206,9 +209,8 @@ public class ClientHandler
             _sessionManager.RemoveSession(_currentSession.Token);
             _currentSession = null;
         
-            NetworkHelper.SendPacket(_clientSocket, 
-                PacketBuilder.CreateEmptyPacket(Command.OK));
-        
+            NetworkHelper.SendPacket(_clientSocket, PacketBuilder.CreateEmptyPacket(Command.OK));
+            _ftpServer.NotifyClientCountChanged(-1);
             Log("User logged out successfully");
         }
     }

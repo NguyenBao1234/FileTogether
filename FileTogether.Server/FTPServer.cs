@@ -106,11 +106,11 @@ public class FTPServer
                 }
                 else
                 {
-                    var clientHandler = new ClientHandler(clientSk, _sharedFolder, _sessionManager, _userManager);
+                    var clientHandler = new ClientHandler(clientSk, _sharedFolder, _sessionManager, _userManager, this);
                     lock (_clientHandlers)
                     {
                         _clientHandlers.Add(clientHandler);
-                        OnClientCountChanged?.Invoke(_clientHandlers.Count);
+                        OnClientCountChanged?.Invoke(1);
                     }
                     clientHandler.Start();
                     Log($"New client accepted. Setup handler for {clientSk.LocalEndPoint}");    
@@ -154,5 +154,10 @@ public class FTPServer
             Log($"Error stopping server: {ex.Message}");
             Console.WriteLine(ex);
         }
+    }
+
+    public void NotifyClientCountChanged(int amount)
+    {
+        OnClientCountChanged?.Invoke(amount);
     }
 }

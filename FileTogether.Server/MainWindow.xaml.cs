@@ -60,7 +60,17 @@ public partial class MainWindow : Window
                 
             // Subscribe events
             _server.OnLog += (msg) => Dispatcher.Invoke(() => AppendLog(msg));
-            _server.OnClientCountChanged += (count) => Dispatcher.Invoke(() => TxtClientCount.Text = count.ToString());
+           
+            _server.OnClientCountChanged += (amount) => Dispatcher.Invoke(() =>
+            {
+                if (amount == 0) TxtClientCount.Text = amount.ToString();// in Stop server case
+                else
+                {
+                    int current = int.Parse(TxtClientCount.Text);
+                    TxtClientCount.Text = (current + amount).ToString();
+                }
+                
+            });
                 
             _server.Start();
                 
