@@ -11,7 +11,7 @@ public enum Command : byte
     // Server -> Client responses
     OK = 10,       // Thành công
     ERROR = 11,    // Lỗi
-    FILE_LIST = 12, // Trả về danh sách file
+    ITEM_LIST = 12, // Trả về danh sách file
     UNAUTHORIZED = 13,
     
     //Authentication

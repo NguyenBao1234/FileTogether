@@ -21,7 +21,7 @@ namespace FileTogether.Client;
 public partial class MainWindow : Window
 {
     FTPClient _client;
-    List<FileInfo>? _currentFiles;
+    List<ItemInfo>? _currentFiles;
     public MainWindow()
     {
         InitializeComponent();
@@ -98,7 +98,7 @@ public partial class MainWindow : Window
     {
         if (FileDG.SelectedItem is FileDisplayInfo selectedItem)
         {
-            FileInfo selectedFile = selectedItem.OriginalFile;
+            ItemInfo selectedFile = selectedItem.OriginalFile;
             
             var dialog = new SaveFileDialog
             {
@@ -186,7 +186,7 @@ public partial class MainWindow : Window
     {
         if (FileDG.SelectedItem is FileDisplayInfo selectedItem)
         {
-            FileInfo selectedFile = selectedItem.OriginalFile;
+            ItemInfo selectedFile = selectedItem.OriginalFile;
         
             var decision = MessageBox.Show(
                 $"Are you sure you want to delete '{selectedFile.FileName}'?",
@@ -222,7 +222,7 @@ public partial class MainWindow : Window
             return;
         }
             
-        _currentFiles = _client.GetFileList();
+        _currentFiles = _client.GetItemList();
             
         if (_currentFiles != null)
         {

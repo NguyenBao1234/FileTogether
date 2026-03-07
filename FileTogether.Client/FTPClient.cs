@@ -138,7 +138,7 @@ public class FTPClient
         
     }
     
-    public List<FileInfo>? GetFileList()
+    public List<ItemInfo>? GetItemList()
     {
         if (!bConnected||!bAuthenticated)
         {
@@ -180,10 +180,10 @@ public class FTPClient
                 return null;
             }
 
-            if (responseResult.Command == Command.FILE_LIST)
+            if (responseResult.Command == Command.ITEM_LIST)
             {
                 Console.WriteLine(_socket.RemoteEndPoint + "'s response is OK, now getting list of files");
-                var files = PacketBuilder.GetObjectFromPacket<List<FileInfo>>(responseResult);
+                var files = PacketBuilder.GetObjectFromPacket<List<ItemInfo>>(responseResult);
                 Log($"Found {files.Count} files");
                 return files;
             }

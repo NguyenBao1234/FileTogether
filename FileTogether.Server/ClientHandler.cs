@@ -10,6 +10,7 @@ public class ClientHandler
 {
     private Socket _clientSocket;
     private string _sharedFolder;
+    private string _currentDirectory;
     private Thread _thread;
     
     private FTPServer _ftpServer;
@@ -27,6 +28,7 @@ public class ClientHandler
         _userManager = userManager;
         _ftpServer = ftpServer;
         _currentSession = null; //not login yet
+        _currentDirectory = ""; //root
     }
 
     public void Start()
@@ -220,7 +222,7 @@ public class ClientHandler
         switch (packet.Command)
         {
             case Command.LIST:
-                HandleListFiles();
+                HandleListItems();
                 break;
             case Command.UPLOAD:
                 if(_currentSession.User.Role >= UserRole.PowerUser) HandleUpload(packet);
@@ -233,25 +235,51 @@ public class ClientHandler
                 if(_currentSession.User.Role >= UserRole.PowerUser) HandleDelete(packet);
                 else SendUnauthorized("You don't have permission to delete");
                 break;
+            
+            //Directory commands
+            case Command.CREATE_DIR:
+                HandleCreateDirectory(packet);
+                break;
+            
+            case Command.DELETE_DIR:
+                HandleDeleteDirectory(packet);
+                break;
+            
+            case Command.CHANGE_DIR:
+                HandleChangeDirectory(packet);
+                break;
+            
+            case Command.GET_CURRENT_DIR:
+                HandleGetCurrentDirectory();
+                break;
             default:
                 SendError("Unknown command");
                 break;
         }
     }
-    private void HandleListFiles()
+
+    private void HandleListItems()
     {
         Log("[/HandleListFiles]:Start");
         try
         {
+            string path = GetAbsolutePath();
+            var dirs = Directory.GetDirectories(path)
+                .Select(d => new DirectoryInfo(d))
+                .Select(di=> new ItemInfo(di.Name, 0, di.LastAccessTime))
+                .ToList();
+            
             var files = Directory.GetFiles(_sharedFolder)
                 .Select(f => new System.IO.FileInfo(f))
-                .Select(fi => new FileTogether.Core.FileInfo(fi.Name, fi.Length, fi.LastWriteTime))
+                .Select(fi => new FileTogether.Core.ItemInfo(fi.Name, fi.Length, fi.LastWriteTime))
                 .ToList();
-                
-            var fileListPacket = PacketBuilder.CreateObjectPacket(Command.FILE_LIST, files);
+            
+            var allItems = dirs.Concat(files).ToList();//Concatenate = ghép nối
+            
+            var fileListPacket = PacketBuilder.CreateObjectPacket(Command.ITEM_LIST, allItems);
             NetworkHelper.SendPacket(_clientSocket, fileListPacket);
                 
-            Log($"[/HandleListFiles] Sent file list: {files.Count} files");
+            Log($"[/HandleListFiles] Sent item list: {dirs.Count} folder, {files.Count} files");
         }
         catch (Exception ex)
         {
@@ -263,7 +291,7 @@ public class ClientHandler
         Log("[/HandleUpload]:Start");
         var uploadRequest = PacketBuilder.GetObjectFromPacket<UploadRequest>(packet);
         string fileName = uploadRequest.FileName;
-        string savePath = Path.Combine(_sharedFolder, fileName);
+        string savePath = GetAbsolutePath(fileName);
         
         // Gửi OK để client bắt đầu gửi
         NetworkHelper.SendPacket(_clientSocket, PacketBuilder.CreateEmptyPacket(Command.OK));
@@ -288,7 +316,7 @@ public class ClientHandler
         try
         {
             string fileName = PacketBuilder.GetTextFromPacket(packet);
-            string filePath = Path.Combine(_sharedFolder, fileName);
+            string filePath = GetAbsolutePath(fileName);
                 
             if (!File.Exists(filePath))
             {
@@ -338,6 +366,159 @@ public class ClientHandler
             SendError($"Delete error: {ex.Message}");
         }
     }
+    
+    private void HandleCreateDirectory(Packet packet)
+    {
+        if (_currentSession.User.Role < UserRole.PowerUser)
+        {
+            SendUnauthorized("No permission to create directory");
+            return;
+        }
+
+        try
+        {
+            var dirPath = PacketBuilder.GetTextFromPacket(packet);
+            dirPath = GetAbsolutePath(dirPath);
+            if (Directory.Exists(dirPath))
+            {
+                SendError("Directory already exists");
+                return;
+            }
+        
+            Directory.CreateDirectory(dirPath);
+        
+            NetworkHelper.SendPacket(_clientSocket, PacketBuilder.CreateEmptyPacket(Command.OK));
+            Log($"Handle Create Directory: {dirPath} in {_currentDirectory}");
+        }
+        catch (Exception exception)
+        {
+            SendError($"Create directory exception error: {exception.Message}");
+        }
+    }
+    
+    private void HandleDeleteDirectory(Packet packet)
+    {
+        if (_currentSession.User.Role < UserRole.Admin)
+        {
+            SendUnauthorized("No permission to delete directory");
+            return;
+        }
+
+        try
+        {
+            var requestDirPath =PacketBuilder.GetTextFromPacket(packet);
+            var dirPath = GetAbsolutePath(requestDirPath);
+        
+            if (!Directory.Exists(dirPath))
+            {
+                SendError("Directory not found");
+                return;
+            }
+        
+            Directory.Delete(dirPath, recursive: true);
+            NetworkHelper.SendPacket(_clientSocket, PacketBuilder.CreateEmptyPacket(Command.OK));
+        
+            Log($"Deleted directory: {requestDirPath} from {_currentDirectory}");
+        }
+        catch (Exception ex)
+        {
+            SendError($"Delete directory exception error: {ex.Message}");
+        }
+    }
+    
+    private void HandleChangeDirectory(Packet packet)
+    {
+        var requestDirPath = PacketBuilder.GetTextFromPacket(packet);
+
+        if (requestDirPath == "..")
+        {
+            if (String.IsNullOrEmpty(_currentDirectory))
+            {
+                SendError("Already at root directory");
+                return;
+            }
+            // Lùi về parent
+            int lastSeparator = _currentDirectory.LastIndexOfAny(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            
+            if (lastSeparator > 0) _currentDirectory = _currentDirectory.Substring(0, lastSeparator);
+            else _currentDirectory = ""; // Về root
+        }
+        else
+        {
+            string newPath = GetAbsolutePath(requestDirPath);
+            
+            if (!Directory.Exists(newPath))
+            {
+                SendError("Directory not found");
+                return;
+            }
+            
+            // Update current directory
+            if (string.IsNullOrEmpty(_currentDirectory))
+            {
+                _currentDirectory = requestDirPath;
+            }
+            else
+            {
+                _currentDirectory = Path.Combine(_currentDirectory, requestDirPath);
+            }
+        }
+        
+        var responsePacket = PacketBuilder.CreateTextPacket(Command.OK, _currentDirectory);
+        NetworkHelper.SendPacket(_clientSocket, responsePacket);
+    }
+
+    
+    private void HandleGetCurrentDirectory()
+    {
+        try
+        {
+            var responsePacket = PacketBuilder.CreateTextPacket(Command.OK, _currentDirectory);
+            NetworkHelper.SendPacket(_clientSocket, responsePacket);
+        }
+        catch (Exception e)
+        {
+            SendError($"Get current directory exception error: {e.Message}");
+        }
+    }
+
+    
+    private string GetAbsolutePath(string relativePath = null)
+    {
+        string path;
+    
+        if (string.IsNullOrEmpty(relativePath))
+        {
+            // Lấy đường dẫn hiện tại
+            path = Path.Combine(_sharedFolder, _currentDirectory);
+        }
+        else
+        {
+            path = Path.Combine(_sharedFolder, _currentDirectory, relativePath);
+        }
+    
+        // Normalize path avoid path traversal attack (exp: ../../Windows/System32)
+        path = Path.GetFullPath(path);
+    
+        // avoid beyond shared folder
+        if (!path.StartsWith(_sharedFolder))
+        {
+            throw new UnauthorizedAccessException("Access denied: Path outside shared folder");
+        }
+    
+        return path;
+    }
+    
+    private string GetRelativePath(string absolutePath)
+    {
+        if (absolutePath.StartsWith(_sharedFolder))
+        {
+            string relative = absolutePath.Substring(_sharedFolder.Length);
+            return relative.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);//Delete '/' or '\' char in first left side
+        }
+        return "";
+    }
+    
     private void SendError(string message)
     {
         Log($"Error sent: {message}");
