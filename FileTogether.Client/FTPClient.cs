@@ -16,6 +16,7 @@ public class FTPClient
     private bool bAuthenticated;
     private string? _sessionToken;
     private User? _currentUser;
+    private string _currentPath = "";
     
     public event Action<string> OnLog;
     public event Action<bool> OnConnectionChanged;
@@ -23,6 +24,7 @@ public class FTPClient
     public bool IsConnected => bConnected;
     public bool IsAuthenticated => bAuthenticated; 
     public User CurrentUser => _currentUser;
+    public string  CurrentPath => _currentPath;
 
     public bool  Connect(string inIpAdress, int inPort)
     {
@@ -102,6 +104,7 @@ public class FTPClient
             bAuthenticated = false;
             _sessionToken = null;
             _currentUser = null;
+            _currentPath = "";
             Log("Disconnected");
         }
         catch (Exception e)
@@ -335,7 +338,185 @@ public class FTPClient
         }
     }
 
+    public bool CreateDirectory(string directoryName)
+    {
+        Console.WriteLine("Starting to create directory");
+        if (!bConnected || !bAuthenticated)
+        {
+            Log("Not authenticated");
+            return false;
+        }
 
+        try
+        {
+            Console.WriteLine("send create directory request packet");
+            var creRequestPacket = PacketBuilder.CreateTextPacket(Command.CREATE_DIR, directoryName);
+            NetworkHelper.SendPacket(_socket, creRequestPacket);
+            var responsePacket = NetworkHelper.ReceivePacket(_socket);
+            Console.WriteLine("receive create directory response packet");
+            if (responsePacket == null)
+            {
+                Log("Lost connection");
+                Disconnect();
+                return false;
+            }
+
+            if (responsePacket.Command == Command.UNAUTHORIZED)
+            {
+                Log($"Unauthorized: {PacketBuilder.GetTextFromPacket(responsePacket)}");
+                return false;
+            }
+
+            if (responsePacket.Command == Command.ERROR)
+            {
+                string errorMsg = PacketBuilder.GetTextFromPacket(responsePacket);
+                Log($"Create Dir Error: {errorMsg}");
+                return false;
+            }
+
+            if (responsePacket.Command == Command.OK)
+            {
+                Log($"Created Successfully: {directoryName}");
+                return true;
+            }
+            Log("Unexpected response of Create Directory Request: "+ responsePacket.Command);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Log($"Create Dir Error: {ex.Message}");
+            return false;
+        }
+    }
+
+    public bool DeleteDirectory(string directoryName)
+    {
+        if (!bConnected || !bAuthenticated)
+        {
+            Log("Not authenticated");
+            return false;
+        }
+
+        try
+        {
+            var delRequestPacket =  PacketBuilder.CreateTextPacket(Command.DELETE, directoryName);
+            NetworkHelper.SendPacket(_socket, delRequestPacket);
+            var responsePacket = NetworkHelper.ReceivePacket(_socket);
+            
+            if (responsePacket == null)
+            {
+                Log("Lost connection");
+                Disconnect();
+                return false;
+            }
+
+            if (responsePacket.Command == Command.UNAUTHORIZED)
+            {
+                Log($"Unauthorized: {PacketBuilder.GetTextFromPacket(responsePacket)}");
+                return false;
+            }
+
+            if (responsePacket.Command == Command.ERROR)
+            {
+                string errorMsg = PacketBuilder.GetTextFromPacket(responsePacket);
+                Log($"Delete Dir Error: {errorMsg}");
+                return false;
+            }
+
+            if (responsePacket.Command == Command.OK)
+            {
+                Log($"Deleted Successfully: {directoryName}");
+                return true;
+            }
+            Log("Unexpected response");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Log($"Delete Dir Error: {ex.Message}");
+            return false;
+        }
+    }
+
+    public string GetCurrentDirectory()
+    {
+        if (!bConnected || !bAuthenticated)
+        {
+            Log("Not authenticated");
+            return "false";
+        }
+
+        try
+        {
+            var getRequestPacket = PacketBuilder.CreateEmptyPacket(Command.GET_CURRENT_DIR);
+            NetworkHelper.SendPacket(_socket, getRequestPacket);
+            var responsePacket = NetworkHelper.ReceivePacket(_socket);
+        
+            if (responsePacket != null && responsePacket.Command == Command.OK)
+            {
+                var pathResponse = PacketBuilder.GetTextFromPacket(responsePacket);
+                return pathResponse;
+            }
+            return "";
+        }
+        catch (Exception ex)
+        {
+            Log($"Get current directory error: {ex.Message}");
+            return "";
+        }
+    }
+
+    public bool ChangeCurrentDirectory(string directoryName)
+    {
+        if (!bConnected || !bAuthenticated)
+        {
+            Log("Not authenticated");
+            return false;
+        }
+
+        try
+        {
+            var chaRequestPacket = PacketBuilder.CreateTextPacket(Command.CHANGE_DIR,  directoryName);
+            NetworkHelper.SendPacket(_socket, chaRequestPacket);
+        
+            var responsePacket = NetworkHelper.ReceivePacket(_socket);
+        
+            if (responsePacket == null)
+            {
+                Log("Lost connection");
+                Disconnect();
+                return false;
+            }
+
+            if (responsePacket.Command == Command.UNAUTHORIZED)
+            {
+                Log($"Unauthorized: {PacketBuilder.GetTextFromPacket(responsePacket)}");
+                return false;
+            }
+
+            if (responsePacket.Command == Command.ERROR)
+            {
+                string errorMsg = PacketBuilder.GetTextFromPacket(responsePacket);
+                Log($"Change Dir Error: {errorMsg}");
+                return false;
+            }
+
+            if (responsePacket.Command == Command.OK)
+            {
+                _currentPath = PacketBuilder.GetTextFromPacket(responsePacket);
+                Log($"Changed directory to: {_currentPath}");
+                return true;
+            }
+            Log("Unexpected response");
+            return false;
+        }
+        catch (Exception e)
+        {
+            Log($"Change Dir Exception Error: {e.Message}");
+            return false;
+        }
+    }
+    
     private void Log(string message)
     {
         OnLog?.Invoke($"[{DateTime.Now:HH:mm:ss}-FTP Client] {message}");

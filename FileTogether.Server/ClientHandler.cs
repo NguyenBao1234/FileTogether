@@ -266,12 +266,12 @@ public class ClientHandler
             string path = GetAbsolutePath();
             var dirs = Directory.GetDirectories(path)
                 .Select(d => new DirectoryInfo(d))
-                .Select(di=> new ItemInfo(di.Name, 0, di.LastAccessTime))
+                .Select(di=> new ItemInfo(di.Name, 0, di.LastAccessTime, true))
                 .ToList();
             
-            var files = Directory.GetFiles(_sharedFolder)
-                .Select(f => new System.IO.FileInfo(f))
-                .Select(fi => new FileTogether.Core.ItemInfo(fi.Name, fi.Length, fi.LastWriteTime))
+            var files = Directory.GetFiles(path)
+                .Select(f => new FileInfo(f))
+                .Select(fi => new ItemInfo(fi.Name, fi.Length, fi.LastWriteTime, false))
                 .ToList();
             
             var allItems = dirs.Concat(files).ToList();//Concatenate = ghép nối

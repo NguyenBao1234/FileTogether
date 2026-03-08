@@ -21,7 +21,7 @@ namespace FileTogether.Client;
 public partial class MainWindow : Window
 {
     FTPClient _client;
-    List<ItemInfo>? _currentFiles;
+    List<ItemInfo>? _currentItems;
     public MainWindow()
     {
         InitializeComponent();
@@ -46,11 +46,13 @@ public partial class MainWindow : Window
             
         BtnLogout.IsEnabled = bConnect;
         BtnDownload.IsEnabled = bConnect;
+        btnBack.IsEnabled = bConnect;
             
         // Chỉ enable upload/delete nếu có quyền
         if (!bConnect) return;
         BtnUpload.IsEnabled = _client.CurrentUser.Role >= UserRole.PowerUser;
         BtnDelete.IsEnabled = _client.CurrentUser.Role == UserRole.Admin;
+        btnNewFolder.IsEnabled = _client.CurrentUser.Role >= UserRole.PowerUser;
         
     }
 
@@ -60,43 +62,14 @@ public partial class MainWindow : Window
         TxtBoxLogs.ScrollToEnd();
     }
 
-    private void BtnConnect_Click(object sender, RoutedEventArgs e)
-    {
-        var serverIP = TxtServerIP.Text.Trim();
-        if (!int.TryParse(TxtPort.Text, out int port) || string.IsNullOrEmpty(serverIP))
-        {
-            MessageBox.Show("Invalid port number or server ip", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            return;
-        }
-        Console.WriteLine("Starting connection...");
-        bool bConnectSuccess = _client.Connect(serverIP, port);
-        if (bConnectSuccess)
-        {
-            RefreshFileList();
-            Console.WriteLine("Successfully connected to server");
-        }
-        else
-        {
-            Console.WriteLine("Failed to connect to server");
-            MessageBox.Show("Failed to connect to server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private void BtnDisconnect_Click(object sender, RoutedEventArgs e)
-    {
-        _client.Disconnect();
-        FileDG.ItemsSource = null;
-        _currentFiles = null;
-    }
-
     private void BtnRefresh_Click(object sender, RoutedEventArgs e)
     {
-        RefreshFileList();
+        RefreshItemList();
     }
 
     private void BtnDownload_Click(object sender, RoutedEventArgs e)
     {
-        if (FileDG.SelectedItem is FileDisplayInfo selectedItem)
+        if (ItemDG.SelectedItem is ItemDisplayInfo selectedItem)
         {
             ItemInfo selectedFile = selectedItem.OriginalFile;
             
@@ -167,7 +140,7 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show("Uploaded successfully", "Success",
                     MessageBoxButton.OK, MessageBoxImage.Information);
-                RefreshFileList();
+                RefreshItemList();
             }
             else
             {
@@ -184,7 +157,7 @@ public partial class MainWindow : Window
 
     private void BtnDelete_Click(object sender, RoutedEventArgs e)
     {
-        if (FileDG.SelectedItem is FileDisplayInfo selectedItem)
+        if (ItemDG.SelectedItem is ItemDisplayInfo selectedItem)
         {
             ItemInfo selectedFile = selectedItem.OriginalFile;
         
@@ -200,7 +173,7 @@ public partial class MainWindow : Window
             if (success)
             {
                 MessageBox.Show("Deleted successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                RefreshFileList();
+                RefreshItemList();
             }
             else
             {
@@ -214,24 +187,90 @@ public partial class MainWindow : Window
         }
     }
     
-    private void RefreshFileList()
+    private void RefreshItemList()
     {
+        Console.WriteLine("call Refresh file list");
         if (!_client.IsConnected)
         {
             MessageBox.Show("Not connected to server", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
             
-        _currentFiles = _client.GetItemList();
+        _currentItems = _client.GetItemList();
             
-        if (_currentFiles != null)
+        if (_currentItems != null)
         {
-            // Bind to DataGrid with FormattedSize property
-            var displayFiles = _currentFiles.Select(f => new FileDisplayInfo(f) ).ToList();
-                
-            FileDG.ItemsSource = displayFiles;//Data grid
+            Console.WriteLine("items found");
+            var displayItems = _currentItems.Select(f => new ItemDisplayInfo(f) ).ToList();
+            
+            // DEBUG: Kiểm tra Items
+            Console.WriteLine($"ItemDG.Items.Count = {ItemDG.Items.Count}");
+            Console.WriteLine($"ItemDG.ItemsSource is null? {ItemDG.ItemsSource == null}");
+
+            
+            ItemDG.ItemsSource = displayItems;//Data grid
+            Console.WriteLine("set up display item finish ");
+            Console.WriteLine($"after setup ItemDG.Items.Count = {ItemDG.Items.Count}");
+            string path = _client.CurrentPath;
+            txtCurrentPath.Text = string.IsNullOrEmpty(path) ? "/" : "/" + path.Replace("\\", "/");
         }
 
+    }
+
+    private void DgFiles_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (ItemDG.SelectedItem is ItemDisplayInfo selectedItem)
+        {
+            if (selectedItem.OriginalFile.IsDirectory)
+            {
+                bool success = _client.ChangeCurrentDirectory(selectedItem.FileName);
+                
+                if(success) RefreshItemList();
+                else 
+                    MessageBox.Show("Change failed", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+    
+    private void BtnBack_Click(object sender, RoutedEventArgs e)
+    {
+        if (_client == null || !_client.IsAuthenticated) return;
+    
+        if (string.IsNullOrEmpty(_client.CurrentPath))
+        {
+            MessageBox.Show("Already at root directory", "Info",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+    
+        bool success = _client.ChangeCurrentDirectory("..");
+    
+        if (success) RefreshItemList();
+        else
+            MessageBox.Show("Failed to go back", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        
+    }
+
+    private void BtnNewFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (_client == null || !_client.IsAuthenticated) return;
+        var promptDialog = new PromptDialog("Enter folder name:", "New Folder");
+        var result = promptDialog.ShowDialog();
+        if (result == true)
+        {
+            var folderName = promptDialog.GetInputText();
+            Console.WriteLine("new folder name request: " + folderName);
+            if (string.IsNullOrEmpty(folderName)) return;
+            
+            var success = _client.CreateDirectory(folderName);
+            if (success)
+            {
+                MessageBox.Show("Created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                RefreshItemList();
+            }
+        }
+        else
+            MessageBox.Show("Unexpected Error",  "Error", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
     private void BtnLogout_Click(object sender, RoutedEventArgs e)
@@ -265,7 +304,7 @@ public partial class MainWindow : Window
             UpdateConnecctionStateUI(true);
             
             // Load file list
-            RefreshFileList();
+            RefreshItemList();
         }
         else
         {
@@ -290,4 +329,5 @@ public partial class MainWindow : Window
         _client?.Disconnect();
         base.OnClosing(e);
     }
+
 }

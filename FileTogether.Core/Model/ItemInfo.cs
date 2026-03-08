@@ -11,11 +11,12 @@ public class ItemInfo
     // Constructor
     public ItemInfo() { FileName =  string.Empty; FileSize = 0; }
         
-    public ItemInfo(string fileName, long fileSize, DateTime lastModified)
+    public ItemInfo(string fileName, long fileSize, DateTime lastModified,  bool isDirectory)
     {
         FileName = fileName;
         FileSize = fileSize;
         LastModified = lastModified;
+        IsDirectory = isDirectory;
     }
         
     // Hiển thị size dễ đọc (KB, MB, GB)
