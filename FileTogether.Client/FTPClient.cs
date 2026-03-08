@@ -201,7 +201,7 @@ public class FTPClient
         }
     }
 
-    public bool DownloadFile(string fileName, string savePath, IProgress<int> progress = null )
+    public bool DownloadFile(string fileName, string savePath, IProgress<TransferProgress> progress = null )
     {
         if (!bConnected||!bAuthenticated)
         {
@@ -246,7 +246,7 @@ public class FTPClient
         
     }
 
-    public bool UploadFile(string filePath, IProgress<int> progress = null)
+    public bool UploadFile(string filePath, IProgress<TransferProgress> progress = null)
     {
         if (!bConnected||!bAuthenticated)
         {

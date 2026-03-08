@@ -78,13 +78,18 @@ public class NetworkHelper
         return receivedCount;
     }
 
-    public static bool SendFile(Socket socket, string filePath, IProgress<int> progress = null)
+    public static bool SendFile(Socket socket, string filePath, IProgress<TransferProgress> progress = null)
     {
         try
         {
             byte[] fileData = File.ReadAllBytes(filePath);
             int fileLength = fileData.Length;
             int chunkSize = 8192; // 8KB per chunk
+            
+            //Estimated Time of Arrival
+            var lastUpdateTime = DateTime.Now;
+            var lastSentBytes = 0;
+            
             int totalSent = 0;
             while (totalSent < fileLength)
             {
@@ -93,7 +98,28 @@ public class NetworkHelper
                 socket.Send(fileData, totalSent, sizeToSend, SocketFlags.None);
                 totalSent += sizeToSend;
             
-                progress?.Report(totalSent * 100 / fileData.Length);
+                var now = DateTime.Now;
+                var timeSinceLastUpdate = now.Subtract(lastUpdateTime).TotalSeconds;
+                if (timeSinceLastUpdate >= 0.1 || totalSent == fileLength)
+                {
+                    long bytesSinceLastUpdate = totalSent - lastSentBytes;
+                    double speedBytesPerSecond = bytesSinceLastUpdate / timeSinceLastUpdate;
+                    int remainingByte = fileLength - totalSent;
+                    TimeSpan eta = speedBytesPerSecond > 0 ?  TimeSpan.FromSeconds((double)remainingByte / speedBytesPerSecond) : TimeSpan.Zero;
+                    
+                    progress?.Report(new TransferProgress
+                    {
+                        TotalBytes = fileLength,
+                        TransferredBytes = totalSent,
+                        Percentage = (int)(totalSent * 100 / fileLength),
+                        SpeedBytesPerSecond = speedBytesPerSecond,
+                        EstimatedTimeRemaining = eta
+                    });
+                    
+                    lastUpdateTime = now;
+                    lastSentBytes = totalSent;
+                }
+                
             }
             return true;
         }
@@ -105,15 +131,21 @@ public class NetworkHelper
     }
     
     // Nhận file từ socket
-    public static bool ReceiveFile(Socket socket, string savePath, long fileSize, IProgress<int> progress = null)
+    public static bool ReceiveFile(Socket socket, string savePath, long fileSize, IProgress<TransferProgress> progress = null)
     {
         try
         {
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[8192];//8KB per chunk
             long totalReceived = 0;
+            
+            var lastUpdateTime = DateTime.Now;
+            long lastReceiveBytes = 0;
                 
             using (var fs = new FileStream(savePath, FileMode.Create, FileAccess.Write))
             {
+                //Estimated Time of Arrival
+
+                
                 while (totalReceived < fileSize)
                 {
                     long remaining = fileSize - totalReceived;
@@ -121,11 +153,24 @@ public class NetworkHelper
                         
                     int received = socket.Receive(buffer, 0, toReceive, SocketFlags.None);
                     if (received == 0) return false; // Connection lost
+                    
                         
-                    fs.Write(buffer, 0, received);
+                    fs.Write(buffer, 0, received);//do có biến đánh dấu của OS, nên luôn ghi bytes mới từ buffer vào 
                     totalReceived += received;
-                        
-                    progress?.Report((int)(totalReceived * 100 / fileSize));
+                    var now = DateTime.Now;
+                    var speedBytesPerSecond = (totalReceived - lastReceiveBytes) / now.Subtract(lastUpdateTime).TotalSeconds;
+                    var eta = speedBytesPerSecond > 0 ? TimeSpan.FromSeconds((fileSize - totalReceived)/speedBytesPerSecond) : TimeSpan.Zero;
+                    
+                    lastUpdateTime = now;
+                    lastReceiveBytes = totalReceived;
+                    progress?.Report(new TransferProgress
+                    {
+                        TotalBytes = fileSize,
+                        TransferredBytes = totalReceived,
+                        Percentage = (int)(totalReceived * 100 / fileSize),
+                        SpeedBytesPerSecond = speedBytesPerSecond,
+                        EstimatedTimeRemaining = eta
+                    });
                 }
             }
                 

@@ -347,7 +347,7 @@ public class ClientHandler
         try
         {
             string fileName = PacketBuilder.GetTextFromPacket(packet);
-            string filePath = Path.Combine(_sharedFolder, fileName);
+            string filePath = GetAbsolutePath(fileName);
                 
             if (File.Exists(filePath))
             {

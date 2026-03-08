@@ -116,6 +116,11 @@
         <!-- Progress Bar -->
         <GroupBox Header="Transfer Progress" Grid.Row="4" Padding="10" Margin="0,10,0,10">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="60"/>
@@ -125,6 +130,24 @@
                 <TextBlock x:Name="TxtProgress" Text="0%" TextAlignment="Center" 
                            VerticalAlignment="Center" Grid.Column="1" Margin="10,0,0,0" 
                            FontWeight="Bold"/>
+                
+                <!-- Speed & ETA - THÊM MỚI -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+            
+                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+                        <TextBlock Text="Speed:" FontWeight="Bold" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="TxtSpeed" Text="0 KB/s" Foreground="Blue"/>
+                    </StackPanel>
+            
+                    <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
+                        <TextBlock Text="ETA: " FontWeight="Bold" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="TxtETA" Text="--" Foreground="Green"/>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </GroupBox>
         

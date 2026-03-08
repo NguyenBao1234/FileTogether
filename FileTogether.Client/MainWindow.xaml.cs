@@ -81,15 +81,21 @@ public partial class MainWindow : Window
             
             if (dialog.ShowDialog() == true)
             {
-                var progress = new Progress<int>(percent =>
+                ProgressBar.Value = 0;
+                TxtProgress.Text = "0%";
+                TxtSpeed.Text = "0 KB/s";
+                TxtETA.Text = "--";
+                var progress = new Progress<TransferProgress>(transferProgress =>
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        ProgressBar.Value = percent;
-                        TxtProgress.Text = $"{percent}%";
+                        ProgressBar.Value = transferProgress.Percentage;
+                        TxtProgress.Text = $"{transferProgress.Percentage}%";
+                        TxtSpeed.Text = transferProgress.GetFormattedSpeed();
+                        TxtETA.Text = transferProgress.GetFormattedETA();
                     });
                 });
-                    
+
                 bool success = _client.DownloadFile(selectedFile.FileName, dialog.FileName, progress);
                     
                 if (success)
@@ -125,12 +131,18 @@ public partial class MainWindow : Window
         
         if (dialog.ShowDialog() == true)
         {
-            var progress = new Progress<int>(percent =>
+            var progress = new Progress<TransferProgress>(transferProgress =>
             {
+                ProgressBar.Value = 0;
+                TxtProgress.Text = "0%";
+                TxtSpeed.Text = "0 KB/s";
+                TxtETA.Text = "--";
                 Dispatcher.Invoke(() =>
                 {
-                    ProgressBar.Value = percent;
-                    TxtProgress.Text = $"{percent}%";
+                    ProgressBar.Value = transferProgress.Percentage;
+                    TxtProgress.Text = $"{transferProgress.Percentage}%";
+                    TxtSpeed.Text = transferProgress.GetFormattedSpeed();
+                    TxtETA.Text = transferProgress.GetFormattedETA();
                 });
             });
             
