@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:FileTogether.Client"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
         Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Title="RegisterWindow" Height="600" Width="800">
