@@ -4,19 +4,35 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FileTogether.Server"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="800">
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        Title="MainWindow" Height="520" Width="800">
     
-    <Grid Margin="10">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        
-        <!-- Server Settings -->
-        <GroupBox Header="Server Settings" Grid.Row="0" Padding="10" Margin="0,0,0,10">
+            <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="*"/>    <RowDefinition Height="Auto"/> </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="ServerNetwork" Width="24" Height="24" Foreground="{DynamicResource MaterialDesign.Brush.Primary}"/>
+                <TextBlock Text="SERVER CONTROL PANEL" VerticalAlignment="Center" Margin="10,0,0,0" 
+                           FontWeight="ExtraBold" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <materialDesign:PackIcon Kind="WeatherNight" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="Gray"/>
+                <ToggleButton x:Name="DarkThemeToggleButton" 
+                              materialDesign:ToggleButtonAssist.SwitchTrackOnBackground="Gray"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                              Click="DarkThemeToggleButton_Click"
+                              ToolTip="Toggle Dark/Light Mode"/>
+            </StackPanel>
+        </Grid>
+
+        <materialDesign:Card Grid.Row="1" Padding="16" Margin="0,0,0,12" materialDesign:ElevationAssist.Elevation="Dp2">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -24,57 +40,77 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
-                <!-- Port -->
-                <TextBlock Text="Port:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
-                <TextBox x:Name="TxtPort" Text="2121" Grid.Row="0" Grid.Column="1" 
-                         Margin="5,0" Height="25" VerticalContentAlignment="Center"/>
-                
-                <!-- Shared Folder -->
-                <TextBlock Text="Shared Folder:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Margin="0,10,0,0"/>
-                <TextBox x:Name="TxtSharedFolder" Grid.Row="1" Grid.Column="1" 
-                         Margin="5,10,5,0" Height="25" VerticalContentAlignment="Center"/>
-                <Button x:Name="BtnBrowse" Content="Browse..." Grid.Row="1" Grid.Column="2" 
-                        Width="80" Height="25" Margin="0,10,0,0" Click="BtnBrowse_Click"/>
-                <!-- User Folder -->
-                <TextBlock Text="User Folder:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" Margin="0,10,0,0"/>
-                <TextBox x:Name="TxtUserFolder" Grid.Row="2" Grid.Column="1" 
-                         Margin="5,10,5,0" Height="25" VerticalContentAlignment="Center"/>
-                <Button x:Name="BtnBrowseUser" Content="Browse..." Grid.Row="2" Grid.Column="2" 
-                        Width="80" Height="25" Margin="0,10,0,0" Click="BtnBrowseUser_OnClick"/>
+
+                <TextBox x:Name="TxtPort" Text="2121" Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,15"
+                         materialDesign:HintAssist.Hint="Listening Port"
+                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                         materialDesign:TextFieldAssist.LeadingIcon="Numeric"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+
+                <TextBox x:Name="TxtSharedFolder" Grid.Row="1" Grid.Column="0" Margin="0,0,10,15"
+                         materialDesign:HintAssist.Hint="Public Shared Folder Path"
+                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                         materialDesign:TextFieldAssist.LeadingIcon="FolderNetwork"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                <Button x:Name="BtnBrowse" Content="BROWSE" Grid.Row="1" Grid.Column="1" 
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        BorderBrush="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" Height="35" Click="BtnBrowse_Click"/>
+
+                <TextBox x:Name="TxtUserFolder" Grid.Row="2" Grid.Column="0" Margin="0,0,10,0"
+                         materialDesign:HintAssist.Hint="User Private Storage Path"
+                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                         materialDesign:TextFieldAssist.LeadingIcon="Folder"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                <Button x:Name="BtnBrowseUser" Content="BROWSE" Grid.Row="2" Grid.Column="1" 
+                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        BorderBrush="{DynamicResource MaterialDesign.Brush.Foreground}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" Height="35" Click="BtnBrowseUser_OnClick"/>
             </Grid>
-        </GroupBox>
-        
-        <!-- Server Status -->
-        <GroupBox Header="Server Status" Grid.Row="1" Padding="10" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Status: " FontWeight="Bold"/>
-                <TextBlock x:Name="TxtStatus" Text="Stopped" Foreground="Red"/>
-                <TextBlock Text=" | Clients: " FontWeight="Bold" Margin="20,0,0,0"/>
-                <TextBlock x:Name="TxtClientCount" Text="0"/>
-            </StackPanel>
-        </GroupBox>
-        
-        <!-- Logs -->
-        <GroupBox Header="Server Logs" Grid.Row="2" Padding="10">
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Row="2" Padding="12" Margin="0,0,0,12" Background="{DynamicResource MaterialDesign.Brush.Secondary.Container}">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Information" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                    <TextBlock Text=" Status: " FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                    <TextBlock x:Name="TxtStatus" Text="STOPPED" FontWeight="Black" VerticalAlignment="Center" Foreground="Red"/>
+                    
+                    <Separator Style="{StaticResource MaterialDesignLightSeparator}" Margin="20,0" />
+                    
+                    <materialDesign:PackIcon Kind="AccountGroup" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                    <TextBlock Text=" Active Clients: " FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Secondary.OnContainer}"/>
+                    <TextBlock x:Name="TxtClientCount" Text="0" FontWeight="Black" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesign.Brush.Secondary.OnContainer}"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Row="3" Background="#1E1E1E" UniformCornerRadius="4">
             <TextBox x:Name="TxtBoxLogs" 
                      IsReadOnly="True" 
                      VerticalScrollBarVisibility="Auto"
+                     VerticalContentAlignment="Top"
                      TextWrapping="Wrap"
                      FontFamily="Consolas"
-                     FontSize="12"
-                     Background="#F5F5F5"/>
-        </GroupBox>
-        
-        <!-- Control Buttons -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button x:Name="BtnStart" Content="Start Server" Width="120" Height="35" 
+                     FontSize="11"
+                     Foreground="#81C784" 
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="10"/>
+        </materialDesign:Card>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button x:Name="BtnStart" Content="START SERVER" Width="150" Height="45" 
+                    Style="{StaticResource MaterialDesignRaisedButton}"
                     Margin="0,0,10,0" Click="BtnStart_Click" FontWeight="Bold"/>
-            <Button x:Name="BtnStop" Content="Stop Server" Width="120" Height="35" 
+            
+            <Button x:Name="BtnStop" Content="STOP SERVER" Width="150" Height="45" 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+                    BorderBrush="#DDDDDD"
                     IsEnabled="False" Click="BtnStop_Click" FontWeight="Bold"/>
         </StackPanel>
     </Grid>

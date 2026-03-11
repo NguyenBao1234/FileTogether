@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using MessageBox = System.Windows.MessageBox;
 
@@ -29,6 +30,7 @@ public partial class MainWindow : Window
         TxtSharedFolder.Text = "E:\\Applications and Programs\\JetBrains Rider\\Project\\FileTogether\\TestSharedFolder";
             //System.IO.Path.Combine(defaultFolder, "FTPServerFiles");
         TxtUserFolder.Text = System.IO.Path.Combine(defaultFolder, "FTPServerUser");
+        AppendLog("[SERVER LOG]");
             
     }
 
@@ -96,6 +98,7 @@ public partial class MainWindow : Window
             BtnStop.IsEnabled = true;
             TxtPort.IsEnabled = false;
             TxtSharedFolder.IsEnabled = false;
+            TxtUserFolder.IsEnabled = false;
             BtnBrowse.IsEnabled = false;
         }
         catch (Exception ex)
@@ -122,8 +125,25 @@ public partial class MainWindow : Window
         BtnStop.IsEnabled = false;
         TxtPort.IsEnabled = true;
         TxtSharedFolder.IsEnabled = true;
+        TxtUserFolder.IsEnabled = true;
         BtnBrowse.IsEnabled = true;
         TxtClientCount.Text = "0";
     }
 
+    private void DarkThemeToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        PaletteHelper paletteHelper = new PaletteHelper();
+        Theme theme = paletteHelper.GetTheme();
+
+        if (DarkThemeToggleButton.IsChecked == true)
+        {
+            theme.SetBaseTheme(BaseTheme.Dark);
+        }
+        else
+        {
+            theme.SetBaseTheme(BaseTheme.Light);
+        }
+
+        paletteHelper.SetTheme(theme);
+    }
 }

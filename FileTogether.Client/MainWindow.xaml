@@ -155,7 +155,9 @@
     </Grid>
     
     <materialDesign:Card Grid.Row="5" Background="#212121" UniformCornerRadius="5">
-        <TextBox x:Name="TxtBoxLogs" IsReadOnly="True" VerticalScrollBarVisibility="Auto"
+        <TextBox x:Name="TxtBoxLogs" IsReadOnly="True"
+                 VerticalContentAlignment="Top"
+                 VerticalScrollBarVisibility="Auto"
                  TextWrapping="Wrap" FontFamily="Consolas" FontSize="11" 
                  Background="Transparent" Foreground="#81C784" BorderThickness="0" Padding="10"/>
     </materialDesign:Card>

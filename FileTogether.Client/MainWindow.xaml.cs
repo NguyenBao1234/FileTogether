@@ -315,7 +315,7 @@ public partial class MainWindow : Window
             _client.OnLog += (msg) => Dispatcher.Invoke( () => AppendLogUI(msg));
             _client.OnConnectionChanged += (bConnect)  => Dispatcher.Invoke( () => UpdateConnecctionStateUI(bConnect));//call back if server off
             UpdateConnecctionStateUI(true);
-            
+            AppendLogUI("[CLIENT LOG]");
             // Load file list
             RefreshItemList();
         }
