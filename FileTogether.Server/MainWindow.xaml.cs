@@ -24,9 +24,11 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         
-        string defaultFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "FTPServerFiles");
-            TxtSharedFolder.Text = defaultFolder;
+        string defaultFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+        TxtSharedFolder.Text = "E:\\Applications and Programs\\JetBrains Rider\\Project\\FileTogether\\TestSharedFolder";
+            //System.IO.Path.Combine(defaultFolder, "FTPServerFiles");
+        TxtUserFolder.Text = System.IO.Path.Combine(defaultFolder, "FTPServerUser");
             
     }
 
@@ -39,6 +41,19 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
         {
             TxtSharedFolder.Text = dialog.SelectedPath;
+        }
+    }
+    
+    
+    private void BtnBrowseUser_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new FolderBrowserDialog();
+        dialog.SelectedPath = TxtUserFolder.Text;
+
+            
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            TxtUserFolder.Text = dialog.SelectedPath;
         }
     }
 
@@ -110,4 +125,5 @@ public partial class MainWindow : Window
         BtnBrowse.IsEnabled = true;
         TxtClientCount.Text = "0";
     }
+
 }

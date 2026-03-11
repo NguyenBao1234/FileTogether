@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FileTogether.Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="500" Width="800">
     
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -19,6 +19,7 @@
         <GroupBox Header="Server Settings" Grid.Row="0" Padding="10" Margin="0,0,0,10">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -39,6 +40,12 @@
                          Margin="5,10,5,0" Height="25" VerticalContentAlignment="Center"/>
                 <Button x:Name="BtnBrowse" Content="Browse..." Grid.Row="1" Grid.Column="2" 
                         Width="80" Height="25" Margin="0,10,0,0" Click="BtnBrowse_Click"/>
+                <!-- User Folder -->
+                <TextBlock Text="User Folder:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" Margin="0,10,0,0"/>
+                <TextBox x:Name="TxtUserFolder" Grid.Row="2" Grid.Column="1" 
+                         Margin="5,10,5,0" Height="25" VerticalContentAlignment="Center"/>
+                <Button x:Name="BtnBrowseUser" Content="Browse..." Grid.Row="2" Grid.Column="2" 
+                        Width="80" Height="25" Margin="0,10,0,0" Click="BtnBrowseUser_OnClick"/>
             </Grid>
         </GroupBox>
         
