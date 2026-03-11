@@ -100,6 +100,7 @@ public partial class MainWindow : Window
             TxtSharedFolder.IsEnabled = false;
             TxtUserFolder.IsEnabled = false;
             BtnBrowse.IsEnabled = false;
+            BtnBrowseUser.IsEnabled = false;
         }
         catch (Exception ex)
         {
@@ -127,6 +128,7 @@ public partial class MainWindow : Window
         TxtSharedFolder.IsEnabled = true;
         TxtUserFolder.IsEnabled = true;
         BtnBrowse.IsEnabled = true;
+        BtnBrowseUser.IsEnabled = true;
         TxtClientCount.Text = "0";
     }
 

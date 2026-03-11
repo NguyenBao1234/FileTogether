@@ -107,6 +107,7 @@ public class FTPServer
                 else
                 {
                     var clientHandler = new ClientHandler(clientSk, _sharedFolder, _sessionManager, _userManager, this);
+                    clientHandler.OnLog += Log;
                     lock (_clientHandlers)
                     {
                         _clientHandlers.Add(clientHandler);
