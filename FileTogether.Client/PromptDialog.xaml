@@ -5,6 +5,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:FileTogether.Client"
         mc:Ignorable="d"
+        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Title="PromptDialog" Height="150" Width="450">
     <Grid Margin="10">
         <Grid.RowDefinitions>

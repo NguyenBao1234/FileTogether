@@ -4,101 +4,90 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:FileTogether.Client"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Login" Height="450" Width="800">
-    <Grid>
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        Title="Login" Height="650" Width="800">
+    
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="20"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/> 
+            <RowDefinition Height="Auto"/> 
         </Grid.RowDefinitions>
-        
-        <!-- Title -->
-        <TextBlock Grid.Row="0" Text="File Together Login" 
-                   FontSize="20" FontWeight="Bold" 
-                   HorizontalAlignment="Center"/>
-        
-        <!-- Server Info -->
-        <GroupBox Header="Server Connection" Grid.Row="2" Padding="10">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition Width="100"/>
-                </Grid.ColumnDefinitions>
-                
-                <TextBlock Text="Server IP:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
-                <TextBox x:Name="txtServerIP" Text="127.0.0.1" Grid.Row="0" Grid.Column="1" 
-                         Height="25" VerticalContentAlignment="Center" Margin="5,0"/>
-                
-                <TextBlock Text="Port:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" 
-                           Margin="10,0,5,0"/>
-                <TextBox x:Name="txtPort" Text="2121" Grid.Row="0" Grid.Column="3" 
-                         Height="25" VerticalContentAlignment="Center"/>
-            </Grid>
-        </GroupBox>
-        
-        <!-- Login Credentials -->
-        <GroupBox Header="Login Credentials" Grid.Row="3" Padding="10">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                
-                <TextBlock Text="Username:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
-                <TextBox x:Name="txtUsername" Text="admin" Grid.Row="0" Grid.Column="1" 
-                         Height="25" VerticalContentAlignment="Center" Margin="5,0"/>
-                
-                <TextBlock Text="Password:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0"/>
-                <PasswordBox x:Name="txtPassword" Grid.Row="2" Grid.Column="1" 
-                             Height="25" VerticalContentAlignment="Center" Margin="5,0"
-                             KeyDown="TxtPassword_KeyDown"/>
-            </Grid>
-        </GroupBox>
-        
-        <!-- Status Message -->
-        <TextBlock x:Name="txtStatus" Grid.Row="6" 
-                   Foreground="Red" FontWeight="Bold"
-                   HorizontalAlignment="Center" Margin="0,10,0,0"/>
-        
-        <!-- Buttons -->
-        <StackPanel Grid.Row="7" Orientation="Horizontal" 
-                    HorizontalAlignment="Center" Margin="0,10,0,0">
-            <Button x:Name="btnLogin" Content="Login" Width="120" Height="35" 
-                    Margin="0,0,10,0" Click="BtnLogin_Click" 
-                    IsDefault="True" FontWeight="Bold"/>
-            <Button x:Name="btnCancel" Content="Cancel" Width="120" Height="35" 
-                    Margin="0,0,10,0" Click="BtnCancel_Click" IsCancel="True"/>
-            <Button x:Name="btnRegister" Content="Register" Width="120" Height="35" 
-                    Click="BtnRegister_Click" Background="Blue" Foreground="White"/>
+
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+            <materialDesign:PackIcon Kind="CloudSync" Foreground="Black" 
+                                     Width="48" Height="48" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+            <TextBlock Text="FILE TOGETHER" FontSize="28" FontWeight="ExtraBold" Foreground="Black"/>
         </StackPanel>
-        
-        <!-- Help Text -->
-        <TextBlock Grid.Row="8" TextAlignment="Center" Foreground="Gray" 
-                   Margin="0,10,0,0" TextWrapping="Wrap">
-            <Run Text="Default accounts:"/>
-            <LineBreak/>
-            <Run Text="Admin: admin / admin123"/>
-            <LineBreak/>
-            <Run Text="User: user / user123"/>
+
+        <materialDesign:Card Grid.Row="2" Padding="20" materialDesign:ElevationAssist.Elevation="Dp4" UniformCornerRadius="10">
+            <StackPanel>
+                <TextBlock Text="Server Connection" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,15"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBox x:Name="txtServerIP" Text="127.0.0.1"
+                             materialDesign:HintAssist.Hint="Server IP Address"
+                             materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                             materialDesign:TextFieldAssist.LeadingIcon="Server"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+
+                    <TextBox x:Name="txtPort" Text="2121" Grid.Column="2"
+                             materialDesign:HintAssist.Hint="Port"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                </Grid>
+
+                <Separator Style="{StaticResource MaterialDesignLightSeparator}" Margin="0,20"/>
+
+                <TextBlock Text="Credentials" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,15"/>
+                
+                <TextBox x:Name="txtUsername" Text="admin" Margin="0,0,0,15"
+                         materialDesign:HintAssist.Hint="Username"
+                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                         materialDesign:TextFieldAssist.LeadingIcon="Account"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+
+                <PasswordBox x:Name="txtPassword"
+                             materialDesign:HintAssist.Hint="Password"
+                             materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                             materialDesign:TextFieldAssist.LeadingIcon="Lock"
+                             Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
+                             KeyDown="TxtPassword_KeyDown"/>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <TextBlock x:Name="txtStatus" Grid.Row="3" 
+                   Foreground="{DynamicResource MaterialDesign.Color.Error}" 
+                   HorizontalAlignment="Center" Margin="0,15,0,0" Height="20"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0">
+            
+            <Button x:Name="btnLogin" Content="LOGIN" Width="130" Height="45" 
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Margin="0,0,10,0" Click="BtnLogin_Click" IsDefault="True"/>
+            
+            <Button x:Name="btnRegister" Content="REGISTER" Width="130" Height="45" 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="0,0,10,0" Click="BtnRegister_Click"/>
+            
+            <Button x:Name="btnCancel" Content="CANCEL" 
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Click="BtnCancel_Click" IsCancel="True"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="5" TextAlignment="Center" FontSize="11" Margin="0,0,0,10" >
+            <Run Text="Quick Login Tips:" FontWeight="Bold"/>
+            <Run Text=" Admin (admin/admin123) • User (user/user123)"/>
         </TextBlock>
     </Grid>
 </Window>

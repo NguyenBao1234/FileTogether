@@ -11,6 +11,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using FileTogether.Core;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 
 namespace FileTogether.Client;
@@ -342,4 +343,25 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
+    private void DarkThemeToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        // 1. Khởi tạo helper
+        PaletteHelper paletteHelper = new PaletteHelper();
+    
+        // 2. Lấy Theme hiện tại ra
+        var theme = paletteHelper.GetTheme();
+
+        // 3. Kiểm tra và đảo ngược Theme
+        if (DarkThemeToggleButton.IsChecked == true)
+        {
+            theme.SetBaseTheme(BaseTheme.Dark);
+        }
+        else
+        {
+            theme.SetBaseTheme(BaseTheme.Light);
+        }
+
+        // 4. Áp dụng lại Theme đã sửa
+        paletteHelper.SetTheme(theme);
+    }
 }
