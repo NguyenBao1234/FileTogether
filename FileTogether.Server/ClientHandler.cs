@@ -16,7 +16,7 @@ public class ClientHandler
     private FTPServer _ftpServer;
     private SessionManager _sessionManager;
     private UserManager _userManager;
-    private Session? _currentSession;
+    private Session? _currentSession;//Every time a client sends a command, we retrieve that client's session, even client in difference threads
     public event Action<string> OnLog;
     
     public ClientHandler(Socket clientSocket, string sharedFolder, SessionManager sessionManager,
@@ -91,11 +91,11 @@ public class ClientHandler
         
         if (packet.Command == Command.LOGOUT)
         {
-            HandleLogout();
+            HandleLogout(packet);
             return;
         }
 
-        if (_currentSession == null)
+        if (ValidateSession(packet.SessionToken))
         {
             SendUnauthorized("Not logged in");
             return;
@@ -104,6 +104,29 @@ public class ClientHandler
         HandleAuthorizedCommand(packet);
     }
 
+    private bool ValidateSession(string token)
+    {
+        if (string.IsNullOrEmpty(token))
+        {
+            Log("No session token provided");
+            return false;
+        }
+        
+        var session = _sessionManager.GetSession(token); // Session manager updated LastActivity
+    
+        if (session == null)
+        {
+            Log($"Invalid or expired session token: {token.Substring(0, 8)}...");
+            _currentSession = null;
+            return false;
+        }
+    
+        // Update current session
+        _currentSession = session;
+
+        return true;
+    }
+    
     private void HandleRegister(Packet packet)
     {
         try
@@ -202,19 +225,22 @@ public class ClientHandler
         }
     }
     
-    private void HandleLogout()
+    private void HandleLogout(Packet packet)
     {
-        if (_currentSession != null)
+        string token = packet.SessionToken;
+        if (!string.IsNullOrEmpty(token))
         {
-            Log($"User '{_currentSession.User.Username}' logging out");
-        
-            _sessionManager.RemoveSession(_currentSession.Token);
-            _currentSession = null;
-        
-            NetworkHelper.SendPacket(_clientSocket, PacketBuilder.CreateEmptyPacket(Command.OK));
-            _ftpServer.NotifyClientCountChanged(-1);
-            Log("User logged out successfully");
+            var session = _sessionManager.GetSession(token);
+            if (session != null)
+            {
+                Log($"User '{session.User.Username}' logging out");
+                _sessionManager.RemoveSession(token);
+                _currentSession = null;
+                _ftpServer.NotifyClientCountChanged(-1);
+            }
         }
+        NetworkHelper.SendPacket(_clientSocket, PacketBuilder.CreateEmptyPacket(Command.OK));
+        Log("User logged out");
     }
 
     private void HandleAuthorizedCommand(Packet packet)

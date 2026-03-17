@@ -120,7 +120,7 @@ public class FTPClient
     
         try
         {
-            var packet = PacketBuilder.CreateEmptyPacket(Command.LOGOUT);
+            var packet = PacketBuilder.CreateEmptyPacket(Command.LOGOUT, _sessionToken);
             NetworkHelper.SendPacket(_socket, packet);
         
             var response = NetworkHelper.ReceivePacket(_socket);
@@ -151,7 +151,7 @@ public class FTPClient
         
         try
         {
-            var packet = PacketBuilder.CreateEmptyPacket(Command.LIST);
+            var packet = PacketBuilder.CreateEmptyPacket(Command.LIST, _sessionToken);
             Log("Send command to " + _socket.RemoteEndPoint);
 
             NetworkHelper.SendPacket(_socket, packet);
@@ -211,7 +211,7 @@ public class FTPClient
 
         try
         {
-            var packet = PacketBuilder.CreateTextPacket(Command.DOWNLOAD, fileName);
+            var packet = PacketBuilder.CreateTextPacket(Command.DOWNLOAD, fileName, _sessionToken);
             NetworkHelper.SendPacket(_socket, packet);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
         
@@ -257,7 +257,7 @@ public class FTPClient
         {
             var file = new System.IO.FileInfo(filePath);
             var upRequest = new UploadRequest(file.Name, file.Length);
-            var packet = PacketBuilder.CreateObjectPacket<UploadRequest>(Command.UPLOAD, upRequest);
+            var packet = PacketBuilder.CreateObjectPacket<UploadRequest>(Command.UPLOAD, upRequest, _sessionToken);
             NetworkHelper.SendPacket(_socket, packet);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
 
@@ -304,7 +304,7 @@ public class FTPClient
         }
         try
         {
-            var packet = PacketBuilder.CreateTextPacket(Command.DELETE, fileName);
+            var packet = PacketBuilder.CreateTextPacket(Command.DELETE, fileName, _sessionToken);
             NetworkHelper.SendPacket(_socket, packet);
                 
             var response = NetworkHelper.ReceivePacket(_socket);
@@ -350,7 +350,7 @@ public class FTPClient
         try
         {
             Console.WriteLine("send create directory request packet");
-            var creRequestPacket = PacketBuilder.CreateTextPacket(Command.CREATE_DIR, directoryName);
+            var creRequestPacket = PacketBuilder.CreateTextPacket(Command.CREATE_DIR, directoryName, _sessionToken);
             NetworkHelper.SendPacket(_socket, creRequestPacket);
             var responsePacket = NetworkHelper.ReceivePacket(_socket);
             Console.WriteLine("receive create directory response packet");
@@ -399,7 +399,7 @@ public class FTPClient
 
         try
         {
-            var delRequestPacket =  PacketBuilder.CreateTextPacket(Command.DELETE, directoryName);
+            var delRequestPacket =  PacketBuilder.CreateTextPacket(Command.DELETE, directoryName, _sessionToken);
             NetworkHelper.SendPacket(_socket, delRequestPacket);
             var responsePacket = NetworkHelper.ReceivePacket(_socket);
             
@@ -448,7 +448,7 @@ public class FTPClient
 
         try
         {
-            var getRequestPacket = PacketBuilder.CreateEmptyPacket(Command.GET_CURRENT_DIR);
+            var getRequestPacket = PacketBuilder.CreateEmptyPacket(Command.GET_CURRENT_DIR, _sessionToken);
             NetworkHelper.SendPacket(_socket, getRequestPacket);
             var responsePacket = NetworkHelper.ReceivePacket(_socket);
         
@@ -476,7 +476,7 @@ public class FTPClient
 
         try
         {
-            var chaRequestPacket = PacketBuilder.CreateTextPacket(Command.CHANGE_DIR,  directoryName);
+            var chaRequestPacket = PacketBuilder.CreateTextPacket(Command.CHANGE_DIR,  directoryName, _sessionToken);
             NetworkHelper.SendPacket(_socket, chaRequestPacket);
         
             var responsePacket = NetworkHelper.ReceivePacket(_socket);
