@@ -21,10 +21,10 @@ public class Packet
     // Chuyển packet thành byte[] để gửi qua socket
     public byte[] ToBytes()
     {
-        var tokenBytes = Encoding.UTF8.GetBytes(SessionToken);
+        var tokenBytes = string.IsNullOrEmpty(SessionToken) ? Array.Empty<byte>() : Encoding.UTF8.GetBytes(SessionToken);
         var tokenBytesLength = tokenBytes.Length;//Calculate the token length to allow for flexible changes or integration with different token generation methods.
         // [Command: 1 byte][Token length: 4 byte][36 bytes token][DataLength: 4 bytes][Data: n bytes]
-        byte[] result = new byte[1 + 4 + 4 + tokenBytesLength + Data.Length];
+        byte[] result = new byte[1 + 4 + tokenBytesLength + 4 + Data.Length];
             
         result[0] = (byte)Command;
   
@@ -49,21 +49,20 @@ public class Packet
     {
         if (bytes.Length < 9)
             throw new ArgumentException("Invalid packet: too short");
-            
+        Console.WriteLine($"[Packet.FromBytes] Command Index: [{bytes[0]}]");
         Command command = (Command)bytes[0];
         int tokenLength = BitConverter.ToInt32(bytes, 1);
         byte[] tokenBytes = new byte[tokenLength];
         // Token
         string sessionToken = null;
-        if (tokenLength > 0)
-            sessionToken = Encoding.UTF8.GetString(bytes, 5, tokenLength);
+        if (tokenLength > 0) sessionToken = Encoding.UTF8.GetString(bytes, 5, tokenLength);
         
         int offset = 5 + tokenLength;
         int dataLength = BitConverter.ToInt32(bytes, offset);
         byte[] data = new byte[dataLength];
         
         if (dataLength > 0) 
-            Array.Copy(bytes, 5, data, 0, dataLength);
+            Array.Copy(bytes, offset + 4, data, 0, dataLength);
             
         return new Packet(command, data, sessionToken);
     }

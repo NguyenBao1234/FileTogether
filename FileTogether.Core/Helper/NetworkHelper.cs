@@ -11,7 +11,7 @@ public class NetworkHelper
         try
         {
             byte[] data = packet.ToBytes();
-            Console.WriteLine($"[NetworkHelper/SendPacket] Sending {data.Length} bytes...");
+            Console.WriteLine($"[NetworkHelper/SendPacket] Sending {data.Length} bytes... for command " + data[0]);
             int totalSent = 0;
             while (totalSent < data.Length)
             {
@@ -42,17 +42,25 @@ public class NetworkHelper
     {
         try
         {
-            byte[] header = new byte[5]; //Command enum (1b) + file size value (4b)
-            int received = ReceiveExactly(socket, header, 5, 0);
-            Console.WriteLine($"[NetworkHelper/ReceivePacket] Received {received} bytes of Header");
+            byte[] minHeader = new byte[5]; //Command enum (1B) + token size value (4B)
+            int received = ReceiveExactly(socket, minHeader, 5, 0); //rc min header
+            Console.WriteLine($"[NetworkHelper/ReceivePacket] Received {received} bytes of min Header");
             if (received != 5) return null;
             
-            int dataLength = BitConverter.ToInt32(header, 1);//Parse length from 1->4
+            int tokenLength = BitConverter.ToInt32(minHeader, 1);//Parse length from 1->4
+            byte[] header = new byte[5 + tokenLength + 4];
+            Array.Copy(minHeader, 0, header, 0, 5);
+            ReceiveExactly(socket, header, tokenLength, 5);//rc token
+            ReceiveExactly(socket, header, 4, 5 + tokenLength);//rc data length
             
-            byte[] fullPacket = new byte[5 + dataLength];
-            Array.Copy(header, 0, fullPacket, 0, 5);
+            int dataLength = BitConverter.ToInt32(header, 5 + tokenLength);//Parse length from (L(token)+5->9 + L(token)
+            
+            byte[] fullPacket = new byte[5 + tokenLength + 4 + dataLength];
+            Array.Copy(header, 0, fullPacket, 0, 5 + tokenLength + 4);
+            
             if(dataLength == 0) return PacketBuilder.CreateEmptyPacket((Command)header[0]);
-            received = ReceiveExactly(socket, fullPacket, dataLength,5);
+            
+            received = ReceiveExactly(socket, fullPacket, dataLength,5 + tokenLength + 4);
             if (received != dataLength) return null;
             Console.WriteLine($"[NetworkHelper/ReceivePacket] Received {received} bytes of full packet");
             return Packet.FromBytes( fullPacket);

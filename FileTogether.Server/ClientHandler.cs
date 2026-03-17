@@ -75,7 +75,7 @@ public class ClientHandler
     //Handle Client's Command
     private void HandleCommand(Packet packet)
     {
-        Log("/Handle Command]start Handle Command");
+        Log("/Handle Command]start Handle Command "+packet.Command );
 
         if (packet.Command == Command.REGISTER)
         {
@@ -95,7 +95,7 @@ public class ClientHandler
             return;
         }
 
-        if (ValidateSession(packet.SessionToken))
+        if (!ValidateSession(packet.SessionToken))
         {
             SendUnauthorized("Not logged in");
             return;
