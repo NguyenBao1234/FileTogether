@@ -52,11 +52,12 @@ public class Packet
         Console.WriteLine($"[Packet.FromBytes] Command Index: [{bytes[0]}]");
         Command command = (Command)bytes[0];
         int tokenLength = BitConverter.ToInt32(bytes, 1);
+
         byte[] tokenBytes = new byte[tokenLength];
         // Token
         string sessionToken = null;
         if (tokenLength > 0) sessionToken = Encoding.UTF8.GetString(bytes, 5, tokenLength);
-        
+        Console.WriteLine($"[Packet.FromBytes] Token length{tokenLength}: sessionToken={sessionToken}");
         int offset = 5 + tokenLength;
         int dataLength = BitConverter.ToInt32(bytes, offset);
         byte[] data = new byte[dataLength];

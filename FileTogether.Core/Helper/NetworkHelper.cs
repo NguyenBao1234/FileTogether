@@ -58,7 +58,7 @@ public class NetworkHelper
             byte[] fullPacket = new byte[5 + tokenLength + 4 + dataLength];
             Array.Copy(header, 0, fullPacket, 0, 5 + tokenLength + 4);
             
-            if(dataLength == 0) return PacketBuilder.CreateEmptyPacket((Command)header[0]);
+            if(dataLength == 0) return PacketBuilder.CreateEmptyPacket((Command)header[0],  Packet.FromBytes( fullPacket).SessionToken);
             
             received = ReceiveExactly(socket, fullPacket, dataLength,5 + tokenLength + 4);
             if (received != dataLength) return null;

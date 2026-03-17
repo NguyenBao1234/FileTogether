@@ -227,6 +227,10 @@ public partial class MainWindow : Window
             string path = _client.CurrentPath;
             txtCurrentPath.Text = string.IsNullOrEmpty(path) ? "/" : "/" + path.Replace("\\", "/");
         }
+        else
+        {
+            MessageBox.Show("Session expire or lost connection","Response Request", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
 
     }
 
@@ -280,6 +284,10 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show("Created successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 RefreshItemList();
+            }
+            else
+            {
+                MessageBox.Show("Create failed, session expired or lost connection", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         else

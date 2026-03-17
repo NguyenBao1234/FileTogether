@@ -64,12 +64,12 @@ public class FTPServer
             
             _sessionCleanupTimer = new System.Threading.Timer(
                 callback: _ => {
-                    _sessionManager.CleanupExpiredSessions(30); // 30 phút timeout
+                    _sessionManager.CleanupExpiredSessions(1); // 1 phút timeout
                     Log("Expired sessions cleaned up");
                 },
                 state: null,
-                dueTime: TimeSpan.FromMinutes(5),
-                period: TimeSpan.FromMinutes(5)
+                dueTime: TimeSpan.FromMinutes(0.5),
+                period: TimeSpan.FromMinutes(0.5)
             );
         
             Log("User manager initialized");

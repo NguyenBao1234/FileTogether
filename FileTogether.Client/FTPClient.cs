@@ -78,7 +78,7 @@ public class FTPClient
             _currentUser =  bSuccess ? new User(username, "", loginResponse.Role) : null;
             
             string msg = loginResponse.Message;
-            Log($"Login successful. {msg}");
+            Log($"Login successful, session token: {_sessionToken}. Server's message: {msg}, bAuthenticate: {bAuthenticated}");
             
             return loginResponse;
         }
@@ -145,7 +145,7 @@ public class FTPClient
     {
         if (!bConnected||!bAuthenticated)
         {
-            Log("/GetFileList: Not authenticated or connected to Server");
+            Log("/GetFileList: Not authenticated or connected to Server, bConnected:"+bConnected+" bAuthenticated:"+bAuthenticated);
             return null;
         }
         

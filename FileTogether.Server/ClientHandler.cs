@@ -97,7 +97,7 @@ public class ClientHandler
 
         if (!ValidateSession(packet.SessionToken))
         {
-            SendUnauthorized("Not logged in");
+            SendUnauthorized("Not logged in or Session expired");
             return;
         }
         
