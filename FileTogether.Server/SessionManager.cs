@@ -64,17 +64,6 @@ public class SessionManager
         foreach (var token in expired) 
             _sessions.Remove(token);
     }
-
-    public bool IsValid(string token)
-    {
-        if (string.IsNullOrEmpty(token))  return false;
-        if (_sessions.ContainsKey(token))
-        {
-            _sessions[token].LastActivity = DateTime.Now;
-            return true;
-        }
-        return false;
-    }
 }
 
 public class Session

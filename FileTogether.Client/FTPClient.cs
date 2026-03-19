@@ -201,7 +201,7 @@ public class FTPClient
         }
     }
 
-    public bool DownloadFile(string fileName, string savePath, IProgress<TransferProgress> progress = null )
+    public async Task<bool> DownloadFile(string fileName, string savePath, IProgress<TransferProgress> progress = null )
     {
         if (!bConnected||!bAuthenticated)
         {
@@ -217,15 +217,15 @@ public class FTPClient
         
             if (responseResult == null || responseResult.Command != Command.OK)
             {
-                Log("Server rejected upload");
+                Log("Server rejected download");
                 if (responseResult is { Command: Command.ERROR }) Log(PacketBuilder.GetTextFromPacket(responseResult));
                 return false;
             }
 
             long fileSize = long.Parse(PacketBuilder.GetTextFromPacket(responseResult));
             Log($"Downloading {fileSize} bytes");
-        
-            bool bReceiveSuccess =  NetworkHelper.ReceiveFile(_socket, savePath, fileSize, progress);
+
+            bool bReceiveSuccess = await Task.Run(() => NetworkHelper.ReceiveFile(_socket, savePath, fileSize, progress));
             if (bReceiveSuccess)
             {
                 Log($"Downloaded Successfully {fileName} ({fileSize} bytes)");
@@ -246,7 +246,7 @@ public class FTPClient
         
     }
 
-    public bool UploadFile(string filePath, IProgress<TransferProgress> progress = null)
+    public async Task <bool> UploadFile(string filePath, IProgress<TransferProgress> progress = null)
     {
         if (!bConnected||!bAuthenticated)
         {
@@ -269,7 +269,7 @@ public class FTPClient
 
             Log($"Uploading {filePath} bytes");
 
-            var bSendResult = NetworkHelper.SendFile(_socket, filePath, progress);
+            var bSendResult = await Task.Run(()=>NetworkHelper.SendFile(_socket, filePath, progress) );
             if (!bSendResult)
             {
                 Log($"Uploaded failed, maybe connection error");

@@ -54,7 +54,6 @@ public partial class MainWindow : Window
         BtnUpload.IsEnabled = _client.CurrentUser.Role >= UserRole.PowerUser;
         BtnDelete.IsEnabled = _client.CurrentUser.Role == UserRole.Admin;
         btnNewFolder.IsEnabled = _client.CurrentUser.Role >= UserRole.PowerUser;
-        
     }
 
     private void AppendLogUI(string message)
@@ -68,7 +67,7 @@ public partial class MainWindow : Window
         RefreshItemList();
     }
 
-    private void BtnDownload_Click(object sender, RoutedEventArgs e)
+    private async void BtnDownload_Click(object sender, RoutedEventArgs e)
     {
         if (ItemDG.SelectedItem is ItemDisplayInfo selectedItem)
         {
@@ -97,7 +96,7 @@ public partial class MainWindow : Window
                     });
                 });
 
-                bool success = _client.DownloadFile(selectedFile.FileName, dialog.FileName, progress);
+                bool success = await _client.DownloadFile(selectedFile.FileName, dialog.FileName, progress);
                     
                 if (success)
                 {
@@ -106,8 +105,7 @@ public partial class MainWindow : Window
                 }
                 else
                 {
-                    MessageBox.Show("Download failed", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Download failed", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                     
                 // Reset progress bar
@@ -122,7 +120,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void BtnUpload_Click(object sender, RoutedEventArgs e)
+    private async void BtnUpload_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog
         {
@@ -147,7 +145,7 @@ public partial class MainWindow : Window
                 });
             });
             
-            bool success = _client.UploadFile(dialog.FileName, progress);
+            bool success = await _client.UploadFile(dialog.FileName, progress);
             
             if (success)
             {
@@ -353,13 +351,9 @@ public partial class MainWindow : Window
 
     private void DarkThemeToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        // 1. Khởi tạo helper
         PaletteHelper paletteHelper = new PaletteHelper();
-    
-        // 2. Lấy Theme hiện tại ra
         var theme = paletteHelper.GetTheme();
-
-        // 3. Kiểm tra và đảo ngược Theme
+        // Kiểm tra và đảo ngược Theme
         if (DarkThemeToggleButton.IsChecked == true)
         {
             theme.SetBaseTheme(BaseTheme.Dark);
@@ -368,8 +362,6 @@ public partial class MainWindow : Window
         {
             theme.SetBaseTheme(BaseTheme.Light);
         }
-
-        // 4. Áp dụng lại Theme đã sửa
         paletteHelper.SetTheme(theme);
     }
 }
