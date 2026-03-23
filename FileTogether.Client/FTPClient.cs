@@ -476,7 +476,8 @@ public class FTPClient
 
         try
         {
-            var chaRequestPacket = PacketBuilder.CreateTextPacket(Command.CHANGE_DIR,  directoryName, _sessionToken);
+            var dirRequest = new DirectoryRequest(_currentPath,  directoryName);
+            var chaRequestPacket = PacketBuilder.CreateObjectPacket(Command.CHANGE_DIR,  dirRequest, _sessionToken);
             NetworkHelper.SendPacket(_socket, chaRequestPacket);
         
             var responsePacket = NetworkHelper.ReceivePacket(_socket);

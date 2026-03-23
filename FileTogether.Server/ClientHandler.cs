@@ -454,8 +454,9 @@ public class ClientHandler
     
     private void HandleChangeDirectory(Packet packet)
     {
-        var requestDirPath = PacketBuilder.GetTextFromPacket(packet);
-
+        var directoryRequest = PacketBuilder.GetObjectFromPacket<DirectoryRequest>(packet);
+        var requestDirPath = directoryRequest.RequestDirectory;
+        _currentDirectory = directoryRequest.ClientCurrentDirectory;
         if (requestDirPath == "..")
         {
             if (String.IsNullOrEmpty(_currentDirectory))
