@@ -151,7 +151,7 @@ public class FTPClient
         
         try
         {
-            var packet = PacketBuilder.CreateEmptyPacket(Command.LIST, _sessionToken);
+            var packet = PacketBuilder.CreateTextPacket(Command.LIST, _currentPath, _sessionToken);
             Log("Send command to " + _socket.RemoteEndPoint);
 
             NetworkHelper.SendPacket(_socket, packet);
@@ -211,7 +211,8 @@ public class FTPClient
 
         try
         {
-            var packet = PacketBuilder.CreateTextPacket(Command.DOWNLOAD, fileName, _sessionToken);
+            var itemRq = new ItemRequest(_currentPath, fileName);
+            var packet = PacketBuilder.CreateObjectPacket<ItemRequest>(Command.DOWNLOAD, itemRq, _sessionToken);
             NetworkHelper.SendPacket(_socket, packet);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
         
@@ -256,7 +257,7 @@ public class FTPClient
         try
         {
             var file = new System.IO.FileInfo(filePath);
-            var upRequest = new UploadRequest(file.Name, file.Length);
+            var upRequest = new UploadRequest(file.Name, file.Length, _currentPath);
             var packet = PacketBuilder.CreateObjectPacket<UploadRequest>(Command.UPLOAD, upRequest, _sessionToken);
             NetworkHelper.SendPacket(_socket, packet);
             var responseResult = NetworkHelper.ReceivePacket(_socket);
@@ -299,12 +300,14 @@ public class FTPClient
     {
         if (!bConnected||!bAuthenticated)
         {
-            Log("/GetFileList: Not authenticated or connected to Server");
+            Log("/Delete file: Not authenticated or connected to Server");
             return false;
         }
         try
         {
-            var packet = PacketBuilder.CreateTextPacket(Command.DELETE, fileName, _sessionToken);
+            var itemRq = new ItemRequest(_currentPath, fileName);
+            var packet = PacketBuilder.CreateObjectPacket<ItemRequest>(Command.DELETE, itemRq, _sessionToken);
+            
             NetworkHelper.SendPacket(_socket, packet);
                 
             var response = NetworkHelper.ReceivePacket(_socket);
@@ -349,8 +352,8 @@ public class FTPClient
 
         try
         {
-            Console.WriteLine("send create directory request packet");
-            var creRequestPacket = PacketBuilder.CreateTextPacket(Command.CREATE_DIR, directoryName, _sessionToken);
+            var itemRq = new ItemRequest(_currentPath, directoryName);
+            var creRequestPacket = PacketBuilder.CreateObjectPacket<ItemRequest>(Command.CREATE_DIR,itemRq, _sessionToken);
             NetworkHelper.SendPacket(_socket, creRequestPacket);
             var responsePacket = NetworkHelper.ReceivePacket(_socket);
             Console.WriteLine("receive create directory response packet");
@@ -389,82 +392,33 @@ public class FTPClient
         }
     }
 
-    public bool DeleteDirectory(string directoryName)
-    {
-        if (!bConnected || !bAuthenticated)
-        {
-            Log("Not authenticated");
-            return false;
-        }
-
-        try
-        {
-            var delRequestPacket =  PacketBuilder.CreateTextPacket(Command.DELETE, directoryName, _sessionToken);
-            NetworkHelper.SendPacket(_socket, delRequestPacket);
-            var responsePacket = NetworkHelper.ReceivePacket(_socket);
-            
-            if (responsePacket == null)
-            {
-                Log("Lost connection");
-                Disconnect();
-                return false;
-            }
-
-            if (responsePacket.Command == Command.UNAUTHORIZED)
-            {
-                Log($"Unauthorized: {PacketBuilder.GetTextFromPacket(responsePacket)}");
-                return false;
-            }
-
-            if (responsePacket.Command == Command.ERROR)
-            {
-                string errorMsg = PacketBuilder.GetTextFromPacket(responsePacket);
-                Log($"Delete Dir Error: {errorMsg}");
-                return false;
-            }
-
-            if (responsePacket.Command == Command.OK)
-            {
-                Log($"Deleted Successfully: {directoryName}");
-                return true;
-            }
-            Log("Unexpected response");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            Log($"Delete Dir Error: {ex.Message}");
-            return false;
-        }
-    }
-
-    public string GetCurrentDirectory()
-    {
-        if (!bConnected || !bAuthenticated)
-        {
-            Log("Not authenticated");
-            return "false";
-        }
-
-        try
-        {
-            var getRequestPacket = PacketBuilder.CreateEmptyPacket(Command.GET_CURRENT_DIR, _sessionToken);
-            NetworkHelper.SendPacket(_socket, getRequestPacket);
-            var responsePacket = NetworkHelper.ReceivePacket(_socket);
-        
-            if (responsePacket != null && responsePacket.Command == Command.OK)
-            {
-                var pathResponse = PacketBuilder.GetTextFromPacket(responsePacket);
-                return pathResponse;
-            }
-            return "";
-        }
-        catch (Exception ex)
-        {
-            Log($"Get current directory error: {ex.Message}");
-            return "";
-        }
-    }
+    // public string GetCurrentDirectory()
+    // {
+    //     if (!bConnected || !bAuthenticated)
+    //     {
+    //         Log("Not authenticated");
+    //         return "false";
+    //     }
+    //
+    //     try
+    //     {
+    //         var getRequestPacket = PacketBuilder.CreateEmptyPacket(Command.GET_CURRENT_DIR, _sessionToken);
+    //         NetworkHelper.SendPacket(_socket, getRequestPacket);
+    //         var responsePacket = NetworkHelper.ReceivePacket(_socket);
+    //     
+    //         if (responsePacket != null && responsePacket.Command == Command.OK)
+    //         {
+    //             var pathResponse = PacketBuilder.GetTextFromPacket(responsePacket);
+    //             return pathResponse;
+    //         }
+    //         return "";
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Log($"Get current directory error: {ex.Message}");
+    //         return "";
+    //     }
+    // }
 
     public bool ChangeCurrentDirectory(string directoryName)
     {
@@ -476,7 +430,7 @@ public class FTPClient
 
         try
         {
-            var dirRequest = new DirectoryRequest(_currentPath,  directoryName);
+            var dirRequest = new ItemRequest(_currentPath,  directoryName);
             var chaRequestPacket = PacketBuilder.CreateObjectPacket(Command.CHANGE_DIR,  dirRequest, _sessionToken);
             NetworkHelper.SendPacket(_socket, chaRequestPacket);
         

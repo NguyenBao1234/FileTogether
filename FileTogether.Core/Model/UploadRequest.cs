@@ -1,16 +1,9 @@
 namespace FileTogether.Core;
 
 [Serializable]
-public class UploadRequest
+public class UploadRequest(string fileName, long fileSize, string clientCurrentDirectory)
 {
-    public string FileName { get; set; }
-    public long FileSize { get; set; }
-    
-    public UploadRequest() { }
-    
-    public UploadRequest(string fileName, long fileSize)
-    {
-        FileName = fileName;
-        FileSize = fileSize;
-    }
+    public string FileName { get; set; } = fileName;
+    public long FileSize { get; set; } = fileSize;
+    public string ClientCurrentDirectory { get; set; } = clientCurrentDirectory;
 }

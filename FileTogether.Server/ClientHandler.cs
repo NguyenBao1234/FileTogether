@@ -248,7 +248,7 @@ public class ClientHandler
         switch (packet.Command)
         {
             case Command.LIST:
-                HandleListItems();
+                HandleListItems(packet);
                 break;
             case Command.UPLOAD:
                 if(_currentSession.User.Role >= UserRole.PowerUser) HandleUpload(packet);
@@ -275,7 +275,7 @@ public class ClientHandler
                 HandleChangeDirectory(packet);
                 break;
             
-            case Command.GET_CURRENT_DIR:
+            case Command.GET_CURRENT_DIR://this never be requested
                 HandleGetCurrentDirectory();
                 break;
             default:
@@ -284,11 +284,12 @@ public class ClientHandler
         }
     }
 
-    private void HandleListItems()
+    private void HandleListItems(Packet packet)
     {
         Log("[/HandleListFiles]:Start");
         try
         {
+            _currentDirectory = PacketBuilder.GetTextFromPacket(packet);
             string path = GetAbsolutePath();
             var dirs = Directory.GetDirectories(path)
                 .Select(d => new DirectoryInfo(d))
@@ -316,6 +317,7 @@ public class ClientHandler
     {
         Log("[/HandleUpload]:Start");
         var uploadRequest = PacketBuilder.GetObjectFromPacket<UploadRequest>(packet);
+        _currentDirectory = uploadRequest.ClientCurrentDirectory;
         string fileName = uploadRequest.FileName;
         string savePath = GetAbsolutePath(fileName);
         
@@ -341,7 +343,10 @@ public class ClientHandler
         Log("[/HandleDownload]:Start");
         try
         {
-            string fileName = PacketBuilder.GetTextFromPacket(packet);
+            var itemRequest = PacketBuilder.GetObjectFromPacket<ItemRequest>(packet);
+            _currentDirectory = itemRequest.ClientCurrentDirectory;
+            var fileName = itemRequest.RequestItemName;
+
             string filePath = GetAbsolutePath(fileName);
                 
             if (!File.Exists(filePath))
@@ -372,7 +377,9 @@ public class ClientHandler
         Log("[/HandleDelete]:Start");
         try
         {
-            string fileName = PacketBuilder.GetTextFromPacket(packet);
+            var itemRequest = PacketBuilder.GetObjectFromPacket<ItemRequest>(packet);
+            _currentDirectory = itemRequest.ClientCurrentDirectory;
+            var fileName = itemRequest.RequestItemName;
             string filePath = GetAbsolutePath(fileName);
                 
             if (File.Exists(filePath))
@@ -403,7 +410,10 @@ public class ClientHandler
 
         try
         {
-            var dirPath = PacketBuilder.GetTextFromPacket(packet);
+            var itemRequest = PacketBuilder.GetObjectFromPacket<ItemRequest>(packet);
+            _currentDirectory = itemRequest.ClientCurrentDirectory;
+            var dirPath = itemRequest.RequestItemName;
+
             dirPath = GetAbsolutePath(dirPath);
             if (Directory.Exists(dirPath))
             {
@@ -432,7 +442,9 @@ public class ClientHandler
 
         try
         {
-            var requestDirPath =PacketBuilder.GetTextFromPacket(packet);
+            var itemRequest = PacketBuilder.GetObjectFromPacket<ItemRequest>(packet);
+            var requestDirPath = itemRequest.RequestItemName;
+            _currentDirectory = itemRequest.ClientCurrentDirectory;
             var dirPath = GetAbsolutePath(requestDirPath);
         
             if (!Directory.Exists(dirPath))
@@ -454,9 +466,9 @@ public class ClientHandler
     
     private void HandleChangeDirectory(Packet packet)
     {
-        var directoryRequest = PacketBuilder.GetObjectFromPacket<DirectoryRequest>(packet);
-        var requestDirPath = directoryRequest.RequestDirectory;
-        _currentDirectory = directoryRequest.ClientCurrentDirectory;
+        var itemRequest = PacketBuilder.GetObjectFromPacket<ItemRequest>(packet);
+        var requestDirPath = itemRequest.RequestItemName;
+        _currentDirectory = itemRequest.ClientCurrentDirectory;
         if (requestDirPath == "..")
         {
             if (String.IsNullOrEmpty(_currentDirectory))
@@ -495,7 +507,7 @@ public class ClientHandler
         NetworkHelper.SendPacket(_clientSocket, responsePacket);
     }
 
-    
+    //sap xoa luon cai nay
     private void HandleGetCurrentDirectory()
     {
         try
