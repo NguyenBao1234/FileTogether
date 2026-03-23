@@ -41,7 +41,7 @@
             
             <TextBlock Text="SERVER" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0" 
                        Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-            <TextBox x:Name="TxtServerIP" Text="127.0.0.1" Grid.Column="1" Margin="5,0" 
+            <TextBox x:Name="TxtServerIP" Text="00" Grid.Column="1" Margin="5,0" 
                      materialDesign:HintAssist.Hint="IP Address"
                      materialDesign:TextFieldAssist.HasLeadingIcon="True"
                      materialDesign:TextFieldAssist.LeadingIcon="Server"

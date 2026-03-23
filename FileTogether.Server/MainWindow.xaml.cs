@@ -27,14 +27,14 @@ public partial class MainWindow : Window
         
         string defaultFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-        TxtSharedFolder.Text = "E:\\Applications and Programs\\JetBrains Rider\\Project\\FileTogether\\TestSharedFolder";
+        TxtSharedFolder.Text = @"E:\Applications and Programs\JetBrains Rider\Project\FileTogether\TestSharedFolder";
             //System.IO.Path.Combine(defaultFolder, "FTPServerFiles");
         TxtUserFolder.Text = System.IO.Path.Combine(defaultFolder, "FTPServerUser");
         AppendLog("[SERVER LOG]");
             
     }
 
-    private void BtnBrowse_Click(object sender, RoutedEventArgs e)
+    private void BtnBrowseShareFolder_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new System.Windows.Forms.FolderBrowserDialog();
         dialog.SelectedPath = TxtSharedFolder.Text;
@@ -65,7 +65,7 @@ public partial class MainWindow : Window
         {
             int port = int.Parse(TxtPort.Text);
             string sharedFolder = TxtSharedFolder.Text;
-                
+            string userFolder = TxtUserFolder.Text ;
             if (string.IsNullOrWhiteSpace(sharedFolder))
             {
                 MessageBox.Show("Please select a shared folder", "Error", 
@@ -73,7 +73,7 @@ public partial class MainWindow : Window
                 return;
             }
                 
-            _server = new FTPServer(port, sharedFolder);
+            _server = new FTPServer(port, sharedFolder, userFolder);
                 
             // Subscribe events
             _server.OnLog += (msg) => Dispatcher.Invoke(() => AppendLog(msg));
@@ -99,7 +99,7 @@ public partial class MainWindow : Window
             TxtPort.IsEnabled = false;
             TxtSharedFolder.IsEnabled = false;
             TxtUserFolder.IsEnabled = false;
-            BtnBrowse.IsEnabled = false;
+            BtnBrowseShareFolder.IsEnabled = false;
             BtnBrowseUser.IsEnabled = false;
         }
         catch (Exception ex)
@@ -127,7 +127,7 @@ public partial class MainWindow : Window
         TxtPort.IsEnabled = true;
         TxtSharedFolder.IsEnabled = true;
         TxtUserFolder.IsEnabled = true;
-        BtnBrowse.IsEnabled = true;
+        BtnBrowseShareFolder.IsEnabled = true;
         BtnBrowseUser.IsEnabled = true;
         TxtClientCount.Text = "0";
     }

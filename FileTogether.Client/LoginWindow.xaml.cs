@@ -118,7 +118,7 @@ public partial class LoginWindow : Window
     {
         var registerWindow = new RegisterWindow();
         registerWindow.Owner = this;
-        
+        registerWindow.txtServerIP.Text = txtServerIP.Text;
         bool? result = registerWindow.ShowDialog();
         Console.WriteLine("Register Window = " + result);
 

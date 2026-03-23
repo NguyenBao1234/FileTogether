@@ -312,7 +312,8 @@ public partial class MainWindow : Window
     private void ShowLoginWindow()
     {
         var loginWindow = new LoginWindow();
-        bool? result = loginWindow.ShowDialog();
+        if (!TxtServerIP.Text.Equals("00")) loginWindow.txtServerIP.Text = TxtServerIP.Text;
+        var result = loginWindow.ShowDialog();
             
         if (result == true && loginWindow.LoginSuccessful)
         {
@@ -322,6 +323,7 @@ public partial class MainWindow : Window
             _client.OnConnectionChanged += (bConnect)  => Dispatcher.Invoke( () => UpdateConnecctionStateUI(bConnect));//call back if server off
             UpdateConnecctionStateUI(true);
             AppendLogUI("[CLIENT LOG]");
+            TxtServerIP.Text = loginWindow.txtServerIP.Text;
             // Load file list
             RefreshItemList();
         }

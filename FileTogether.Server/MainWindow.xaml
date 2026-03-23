@@ -55,10 +55,10 @@
                          materialDesign:TextFieldAssist.HasLeadingIcon="True"
                          materialDesign:TextFieldAssist.LeadingIcon="FolderNetwork"
                          Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
-                <Button x:Name="BtnBrowse" Content="BROWSE" Grid.Row="1" Grid.Column="1" 
+                <Button x:Name="BtnBrowseShareFolder" Content="BROWSE" Grid.Row="1" Grid.Column="1" 
                         Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
                         BorderBrush="{DynamicResource MaterialDesign.Brush.Foreground}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}" Height="35" Click="BtnBrowse_Click"/>
+                        Style="{StaticResource MaterialDesignOutlinedButton}" Height="35" Click="BtnBrowseShareFolder_Click"/>
 
                 <TextBox x:Name="TxtUserFolder" Grid.Row="2" Grid.Column="0" Margin="0,0,10,0"
                          materialDesign:HintAssist.Hint="User Private Storage Path"
