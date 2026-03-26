@@ -288,8 +288,6 @@ public partial class MainWindow : Window
                 MessageBox.Show("Create failed, session expired or lost connection", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        else
-            MessageBox.Show("Unexpected Error",  "Error", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
     private void BtnLogout_Click(object sender, RoutedEventArgs e)

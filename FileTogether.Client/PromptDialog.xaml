@@ -5,6 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:FileTogether.Client"
         mc:Ignorable="d"
+        Icon="E:\Applications and Programs\JetBrains Rider\Project\FileTogether\FileTogether.Client\FileTogether.ico"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"

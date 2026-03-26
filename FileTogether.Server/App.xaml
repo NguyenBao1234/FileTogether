@@ -15,6 +15,11 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
         
             </ResourceDictionary.MergedDictionaries>
+            
+            <Style TargetType="Window">
+                <Setter Property="Icon" Value="E:\Applications and Programs\JetBrains Rider\Project\FileTogether\FileTogether.Client\FileTogether.ico" />
+            </Style>
+
         </ResourceDictionary>
     </Application.Resources>
 

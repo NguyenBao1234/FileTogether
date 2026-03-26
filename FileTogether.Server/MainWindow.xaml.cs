@@ -11,6 +11,7 @@ using System.Windows.Shapes;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = System.Windows.Forms.OpenFileDialog;
 
 namespace FileTogether.Server;
 
@@ -29,7 +30,7 @@ public partial class MainWindow : Window
 
         TxtSharedFolder.Text = @"E:\Applications and Programs\JetBrains Rider\Project\FileTogether\TestSharedFolder";
             //System.IO.Path.Combine(defaultFolder, "FTPServerFiles");
-        TxtUserFolder.Text = System.IO.Path.Combine(defaultFolder, "FTPServerUser");
+        TxtUserFolder.Text = System.IO.Path.Combine(defaultFolder, "FTPServerUser","user.json");
         AppendLog("[SERVER LOG]");
             
     }
@@ -49,13 +50,13 @@ public partial class MainWindow : Window
     
     private void BtnBrowseUser_OnClick(object sender, RoutedEventArgs e)
     {
-        var dialog = new FolderBrowserDialog();
-        dialog.SelectedPath = TxtUserFolder.Text;
+        var dialog = new OpenFileDialog();
+        dialog.FileName = TxtUserFolder.Text;
 
             
         if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
         {
-            TxtUserFolder.Text = dialog.SelectedPath;
+            TxtUserFolder.Text = dialog.FileName;
         }
     }
 

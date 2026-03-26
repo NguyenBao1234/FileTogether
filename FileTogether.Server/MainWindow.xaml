@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:FileTogether.Server"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
+        Icon="E:\Applications and Programs\JetBrains Rider\Project\FileTogether\FileTogether.Server\FileTogether.ico"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"

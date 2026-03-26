@@ -30,11 +30,11 @@ public class FTPServer
     
     private System.Threading.Timer _sessionCleanupTimer;
     
-    public FTPServer(int port, string sharedFolder, string userFolder)
+    public FTPServer(int port, string sharedFolder, string userFilePath)
     {
         _port = port;
         _sharedFolder = sharedFolder;
-        _userManager = new UserManager(  System.IO.Path.Combine(userFolder, "user.json"));
+        _userManager = new UserManager(userFilePath);
         if (!System.IO.Directory.Exists(_sharedFolder)) System.IO.Directory.CreateDirectory(_sharedFolder);
     }
     
